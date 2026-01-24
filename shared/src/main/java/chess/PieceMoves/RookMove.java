@@ -9,20 +9,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class BishopMove implements MoveCalculator {
+public class RookMove implements MoveCalculator {
 
     @Override
     public Collection<ChessMove> getMoves(ChessBoard board, ChessPosition position) {
         List<ChessMove> moves = new ArrayList<>();
 
         ChessPiece piece = board.getPiece(position);
-        if (piece.getPieceType() != ChessPiece.PieceType.BISHOP && piece.getPieceType() != ChessPiece.PieceType.QUEEN) {
-            throw new RuntimeException("Piece " + piece + " is not bishop, BishopMove cannot calculate move.");
+        if (piece.getPieceType() != ChessPiece.PieceType.ROOK && piece.getPieceType() != ChessPiece.PieceType.QUEEN) {
+            throw new RuntimeException("Piece " + piece + "is not rook, RookMove cannot calculate move.");
         }
 
         for (int t = 0; t < 4; t++) {
-            int[] incR = {1, 1, -1, -1};
-            int[] incC = {1, -1, -1, 1};
+            int[] incR = {0, 1, 0, -1};
+            int[] incC = {1, 0, -1, 0};
 
             for (int i = 1; i <= 8; i++) {
 

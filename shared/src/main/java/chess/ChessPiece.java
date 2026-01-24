@@ -1,9 +1,6 @@
 package chess;
 
-import chess.PieceMoves.BishopMove;
-import chess.PieceMoves.KingMove;
-import chess.PieceMoves.KnightMove;
-import chess.PieceMoves.PawnMove;
+import chess.PieceMoves.*;
 
 import java.util.*;
 
@@ -73,6 +70,9 @@ public class ChessPiece {
         }
         if (type == PieceType.PAWN) {
             return new PawnMove().getMoves(board, myPosition);
+        }
+        if (type == PieceType.ROOK) {
+            return new RookMove().getMoves(board, myPosition);
         }
         return null;
     }
