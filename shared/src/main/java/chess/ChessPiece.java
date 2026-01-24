@@ -2,6 +2,7 @@ package chess;
 
 import chess.PieceMoves.BishopMove;
 import chess.PieceMoves.KingMove;
+import chess.PieceMoves.KnightMove;
 
 import java.util.*;
 
@@ -65,6 +66,9 @@ public class ChessPiece {
         }
         if (type == PieceType.KING) {
             return new KingMove().getMoves(board, myPosition);
+        }
+        if (type == PieceType.KNIGHT) {
+            return new KnightMove().getMoves(board, myPosition);
         }
         return null;
     }

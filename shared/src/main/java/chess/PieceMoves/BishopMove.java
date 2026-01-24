@@ -12,12 +12,6 @@ import java.util.List;
 public class BishopMove implements MoveCalculator {
 
     @Override
-    public boolean checkMove(ChessBoard board, ChessPosition startPosition, ChessPosition endPosition) {
-        Collection<ChessMove> possibleMoves = getMoves(board, startPosition);
-        return(possibleMoves.contains(new ChessMove(startPosition, endPosition)));
-    }
-
-    @Override
     public Collection<ChessMove> getMoves(ChessBoard board, ChessPosition position) {
         List<ChessMove> moves = new ArrayList<>();
 
