@@ -38,6 +38,9 @@ public class ChessBoard {
     }
 
     public boolean checkClear(ChessPosition position) {
+        if (position.outOfBounds()) {
+            return false;
+        }
         return (this.getPiece(position) == null);
     }
 
