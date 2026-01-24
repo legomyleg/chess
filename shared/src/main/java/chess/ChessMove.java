@@ -10,9 +10,15 @@ import java.util.Objects;
  */
 public class ChessMove {
 
-    private final ChessPosition startPosition;
-    private final ChessPosition endPosition;
-    private final ChessPiece.PieceType promotionPiece;
+    protected final ChessPosition startPosition;
+    protected final ChessPosition endPosition;
+    protected final ChessPiece.PieceType promotionPiece;
+
+    public ChessMove(ChessPosition startPosition, ChessPosition endPosition) {
+        this.startPosition = startPosition;
+        this.endPosition = endPosition;
+        promotionPiece = null;
+    }
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
@@ -58,4 +64,11 @@ public class ChessMove {
     public int hashCode() {
         return Objects.hash(getStartPosition(), getEndPosition(), getPromotionPiece());
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s->%s", startPosition, endPosition);
+    }
 }
+
+

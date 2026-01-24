@@ -1,9 +1,9 @@
 package chess;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Map;
+import chess.PieceMoves.BishopMove;
+
+import java.util.*;
+
 import static java.util.Map.entry;
 
 /**
@@ -57,7 +57,14 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        return new ArrayList<ChessMove>();
+        ChessPiece piece = board.getPiece(myPosition);
+        if (piece.getPieceType() == PieceType.BISHOP) {
+            BishopMove move = new BishopMove();
+            return move.getMoves(board, myPosition);
+        }
+        else {
+            return null;
+        }
     }
 
     @Override
