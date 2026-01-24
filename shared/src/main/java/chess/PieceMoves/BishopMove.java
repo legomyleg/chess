@@ -13,7 +13,8 @@ public class BishopMove implements MoveCalculator {
 
     @Override
     public boolean checkMove(ChessBoard board, ChessPosition startPosition, ChessPosition endPosition) {
-        return false;
+        Collection<ChessMove> possibleMoves = getMoves(board, startPosition);
+        return(possibleMoves.contains(new ChessMove(startPosition, endPosition)));
     }
 
     @Override
@@ -31,7 +32,9 @@ public class BishopMove implements MoveCalculator {
 
             for (int i = 1; i <= 8; i++) {
 
-                ChessPosition newPosition = new ChessPosition(position.getRow() + incR[t], position.getColumn() + incC[t]);
+                int rowIncrease = i * incR[t];
+                int colIncrease = i * incC[t];
+                ChessPosition newPosition = new ChessPosition(position.getRow() + rowIncrease, position.getColumn() + colIncrease);
 
                 if (newPosition.outOfBounds()) {
                     break;

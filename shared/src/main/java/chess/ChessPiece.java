@@ -1,6 +1,7 @@
 package chess;
 
 import chess.PieceMoves.BishopMove;
+import chess.PieceMoves.KingMove;
 
 import java.util.*;
 
@@ -57,14 +58,15 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        ChessPiece piece = board.getPiece(myPosition);
-        if (piece.getPieceType() == PieceType.BISHOP) {
-            BishopMove move = new BishopMove();
-            return move.getMoves(board, myPosition);
+        PieceType type = board.getPiece(myPosition).getPieceType();
+
+        if (type == PieceType.BISHOP) {
+            return new BishopMove().getMoves(board, myPosition);
         }
-        else {
-            return null;
+        if (type == PieceType.KING) {
+            return new KingMove().getMoves(board, myPosition);
         }
+        return null;
     }
 
     @Override
