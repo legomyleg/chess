@@ -16,10 +16,18 @@ public class ChessPiece {
 
     private final PieceType type;
     private final ChessGame.TeamColor pieceColor;
+    private boolean moved;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.type = type;
         this.pieceColor = pieceColor;
+        moved = false;
+    }
+
+    public ChessPiece(ChessPiece oldPiece) {
+        type = oldPiece.getPieceType();
+        pieceColor = oldPiece.getTeamColor();
+        moved = oldPiece.hasMoved();
     }
 
     /**
@@ -47,6 +55,14 @@ public class ChessPiece {
      */
     public PieceType getPieceType() {
         return type;
+    }
+
+    public boolean hasMoved() {
+        return moved;
+    }
+
+    public void setMoved() {
+        moved = true;
     }
 
     /**
