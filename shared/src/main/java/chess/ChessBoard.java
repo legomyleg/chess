@@ -1,7 +1,6 @@
 package chess;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -9,11 +8,29 @@ import java.util.Objects;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
-public class ChessBoard {
+public class ChessBoard implements Iterable<ChessBoard.PieceAtPosition> {
     private ChessPiece[][] board;
 
     public ChessBoard() {
         board = new ChessPiece[8][8];
+    }
+
+    public ChessBoard(ChessBoard oldBoard) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+
+                int r = i+1;
+                int c = j+1;
+                ChessPosition currPosition = new ChessPosition(r, c);
+
+                if (oldBoard.getPiece(currPosition) != null) {
+                    board[i][j] = new ChessPiece(oldBoard.getPiece(currPosition));
+                }
+
+                board[i][j] = null;
+
+            }
+        }
     }
 
     /**
@@ -70,21 +87,57 @@ public class ChessBoard {
         }
     }
 
-    @Override
-    public String toString() {
-        String boardLayout = "\n";
-        for (int i = 0; i < 8; i++) {
-            boardLayout.concat("|");
+    public static class PieceAtPosition {
+        private final ChessPiece piece;
+        private final ChessPosition position;
 
+        public PieceAtPosition(ChessPiece piece, ChessPosition position) {
+            this.piece = piece;
+            this.position = position;
+        }
+
+        public ChessPiece getPiece() {
+            return piece;
+        }
+
+        public ChessPosition getPosition() {
+            return position;
+        }
+    }
+
+    @Override
+    public Iterator<PieceAtPosition> iterator() {
+
+        List<PieceAtPosition> pieces = new ArrayList<>();
+
+        for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (board[i][j] != null) {
-                    boardLayout.concat(board[i][j].toString());
-                }
-                else {
-                    boardLayout.concat(" ");
+                    ChessPosition position = new ChessPosition(i + 1, j + 1);
+                    PieceAtPosition piece = new PieceAtPosition(getPiece(position), position);
+                    pieces.add(piece);
                 }
             }
-            boardLayout.concat("|\n");
+        }
+
+        return pieces.iterator();
+    }
+
+    @Override
+    public String toString() {
+        String boardLayout = "";
+        for (int i = 7; i >= 0; i--) {
+
+            for (int j = 0; j < 8; j++) {
+                boardLayout = boardLayout.concat("|");
+                if (board[i][j] != null) {
+                    boardLayout = boardLayout.concat(board[i][j].toString());
+                }
+                else {
+                    boardLayout = boardLayout.concat(" ");
+                }
+                boardLayout = (j == 7) ? boardLayout.concat("|\n") : boardLayout;
+            }
         }
 
         return boardLayout;
