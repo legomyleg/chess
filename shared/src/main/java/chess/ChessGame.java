@@ -109,6 +109,8 @@ public class ChessGame {
             throw new InvalidMoveException("There is no piece at %s.".formatted(move.getStartPosition()));
         } else if (startPiece.getTeamColor() != teamTurn) {
             throw new InvalidMoveException("Not %s's turn. Invalid move.".formatted(startPiece.getTeamColor()));
+        }  else if (!validMoves(move.getStartPosition()).contains(move)) {
+            throw new InvalidMoveException("Move is invalid.");
         }
 
         if ((startPiece.getPieceType() == ChessPiece.PieceType.KING) && Math.abs(startPosition.getColumn() - endPosition.getColumn()) > 1) {
