@@ -11,6 +11,18 @@ import java.util.*;
 public class ChessBoard implements Iterable<ChessBoard.PieceAtPosition> {
     private ChessPiece[][] board;
 
+    static final ChessPosition WHITEKINGPOS = new ChessPosition(1, 5);
+    static final ChessPosition BLACKKINGPOS = new ChessPosition(8, 5);
+    static final ChessPosition[] WHITEROOKPOS = {
+        new ChessPosition(1,1),
+        new ChessPosition(1,8)
+    };
+    static final ChessPosition[] BLACKROOKPOS = {
+        new ChessPosition(8,1),
+        new ChessPosition(8,8)
+    };
+
+
     public ChessBoard() {
         board = new ChessPiece[8][8];
     }

@@ -1,9 +1,6 @@
 package chess;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -200,6 +197,14 @@ public class ChessGame {
         return positionList;
     }
 
+    public ChessPosition getSinglePiece(ChessPiece.PieceType type, TeamColor color) {
+        List<ChessPosition> pieceArray = getPiecePositions(type, color);
+        if (pieceArray.isEmpty()) {
+            throw new RuntimeException("Error in getSinglePiece. Piece %s, %s not found.".formatted(type, color));
+        }
+        return pieceArray.get(0);
+    }
+
     public Collection<ChessMove> teamAttacks(TeamColor team) {
         List<ChessMove> moves = new ArrayList<>();
 
@@ -230,6 +235,80 @@ public class ChessGame {
 
     public void addCastlingMoves(ChessBoard board, Collection<ChessMove> moves, ChessPosition startPosition) {
         throw new RuntimeException("Not Implemented");
+    }
+
+    public boolean canCastle(TeamColor teamColor) {
+
+        ChessPosition defaultKingPosition = (teamColor == TeamColor.WHITE) ? ChessBoard.WHITEKINGPOS : ChessBoard.BLACKKINGPOS;
+
+        ChessPosition kingPosition = getSinglePiece(ChessPiece.PieceType.KING, teamColor);
+        List<ChessPosition> rookPositions = getPiecePositions(ChessPiece.PieceType.ROOK, teamColor);
+        ChessPiece king = board.getPiece(kingPosition);
+
+        TeamColor opponentColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+        Collection<ChessMove> opponentAttacks = teamAttacks(opponentColor);
+        List<ChessPosition> attackedSpots = new ArrayList<>();
+        for (ChessMove move : opponentAttacks) {
+            attackedSpots.add(move.getEndPosition());
+        }
+
+        if (king.hasMoved() || !kingPosition.equals(defaultKingPosition) || isInCheck(teamColor) || opponentAttacks.containsAll(rookPositions)) {
+            return false;
+        }
+
+        for (ChessPosition position : rookPositions) {
+            ChessPiece rook = board.getPiece(position);
+            ChessPosition[] defaultRookPositions = (teamColor == TeamColor.WHITE) ? ChessBoard.WHITEROOKPOS : ChessBoard.BLACKROOKPOS;
+            if (rook.hasMoved() || !Arrays.asList(defaultRookPositions).contains(position)) {
+                return false;
+            }
+        }
+
+        boolean canCastleRight = true;
+        for (int column = kingPosition.getColumn() + 1; column < 8; column++) {
+            ChessPosition position = new ChessPosition(kingPosition.getRow(), column);
+            if (!board.checkClear(position) || attackedSpots.contains(position)) {
+                canCastleRight = false;
+            }
+        }
+
+        boolean canCastleLeft = true;
+        for (int column = kingPosition.getColumn() - 1; column > 1; column--) {
+            ChessPosition position = new ChessPosition(kingPosition.getRow(), column);
+            if (!board.checkClear(position) || attackedSpots.contains(position)) {
+                canCastleLeft = false;
+            }
+        }
+
+        if (canCastleLeft && canCastleRight) {
+            return true;
+        }
+        return false;
+
+    }
+
+    public boolean canCastleLeft(TeamColor teamColor) {
+        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : 8;
+        ChessPosition rookPosition = new ChessPosition(teamRow, 1);
+        ChessPosition kingPosition = new ChessPosition(teamRow, 5);
+
+        ChessPiece rookPiece = board.getPiece(rookPosition);
+        ChessPiece kingPiece = board.getPiece(kingPosition);
+
+        if (rookPiece == null || rookPiece.getPieceType() != ChessPiece.PieceType.ROOK) {
+            return false;
+        }
+        if (kingPiece == null || rookPiece.getPieceType() != ChessPiece.PieceType.KING) {
+            return false;
+        }
+        if (kingPiece.hasMoved() || rookPiece.hasMoved()) {
+            return false;
+        }
+
+        for (int column = kingPosition.getColumn() - 1; column > 1; column++) {
+
+        }
+
     }
 
     @Override
