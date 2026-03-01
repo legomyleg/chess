@@ -20,19 +20,19 @@ public class GameDAO {
         throw new RuntimeException("Not implemented");
     }
 
-    public void updateBlackPlayer(String gameID, String blackUsername) {
+    public void updateBlackPlayer(String gameID, String blackUsername) throws DataAccessException {
         throw new RuntimeException("Not implemented");
     }
 
-    public void updateGame(String gameID, ChessGame newGame) {
+    public void updateGame(String gameID, ChessGame newGame) throws DataAccessException {
         throw new RuntimeException("Not implemented");
     }
 
-    public void updateGameName(String gameID, String gameName) {
+    public void updateGameName(String gameID, String gameName) throws DataAccessException {
         throw new RuntimeException("Not implemented");
     }
 
-    public void deleteGame(String gameID) {
+    public void deleteGame(String gameID) throws DataAccessException {
         throw new RuntimeException("Not implemented");
     }
 }
