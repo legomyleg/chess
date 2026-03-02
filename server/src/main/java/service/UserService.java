@@ -7,8 +7,8 @@ import request.RegisterRequest;
 import result.RegisterResult;
 
 public class UserService {
-    UserDAO userDAO;
-    AuthDOA authDOA;
+    private final UserDAO userDAO;
+    private final AuthDOA authDOA;
 
     public UserService(AuthDOA authDOA, UserDAO userDAO) {
         this.authDOA = authDOA;
