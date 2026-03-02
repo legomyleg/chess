@@ -2,20 +2,12 @@ package dataaccess;
 
 import model.UserData;
 
-public class UserDAO {
-    public void createUser(UserData user) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+public interface UserDAO {
+    void createUser(UserData user) throws DataAccessException;
 
-    public UserData getUser(String username) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    UserData getUser(String username) throws DataAccessException;
 
-    public void updateUser(String username, UserData newUserData) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void updateUser(String username, UserData newUserData) throws DataAccessException;
 
-    public void deleteUser(String username) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void deleteUser(String username) throws DataAccessException;
 }

@@ -3,36 +3,20 @@ package dataaccess;
 import chess.ChessGame;
 import model.GameData;
 
-public class GameDAO {
-    public void createGame(GameData gameData) {
-        throw new RuntimeException("Not implemented");
-    }
+public interface GameDAO {
+    void createGame(GameData gameData) throws DataAccessException;
 
-    public GameData getGameByGameName(String gameName) {
-        throw new RuntimeException("Not implemented");
-    }
+    GameData getGameByGameName(String gameName) throws DataAccessException;
 
-    public GameData getGameByGameID(String gameID) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    GameData getGameByGameID(String gameID) throws DataAccessException;
 
-    public void updateWhitePlayer(String gameID, String whiteUsername) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void updateWhitePlayer(String gameID, String whiteUsername) throws DataAccessException;
 
-    public void updateBlackPlayer(String gameID, String blackUsername) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void updateBlackPlayer(String gameID, String blackUsername) throws DataAccessException;
 
-    public void updateGame(String gameID, ChessGame newGame) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void updateGame(String gameID, ChessGame newGame) throws DataAccessException;
 
-    public void updateGameName(String gameID, String gameName) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void updateGameName(String gameID, String gameName) throws DataAccessException ;
 
-    public void deleteGame(String gameID) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void deleteGame(String gameID) throws DataAccessException;
 }

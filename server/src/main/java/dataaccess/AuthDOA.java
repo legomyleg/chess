@@ -2,28 +2,16 @@ package dataaccess;
 
 import model.AuthData;
 
-public class AuthDOA {
-    public void createAuth(AuthData authData) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+public interface AuthDOA {
+    void createAuth(AuthData authData) throws DataAccessException;
 
-    public AuthData getAuthByToken(String authToken) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    AuthData getAuthByToken(String authToken) throws DataAccessException;
 
-    public AuthData getAuthByUsername(String username) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    AuthData getAuthByUsername(String username) throws DataAccessException;
 
-    public void updateAuth(String newToken, String username) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void updateAuth(String newToken, String username) throws DataAccessException;
 
-    public void deleteAuthByToken(String authToken) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void deleteAuthByToken(String authToken) throws DataAccessException;
 
-    public void deleteAuthByUsername(String username) throws DataAccessException {
-        throw new RuntimeException("Not implemented");
-    }
+    void deleteAuthByUsername(String username) throws DataAccessException;
 }
