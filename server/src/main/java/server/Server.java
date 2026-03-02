@@ -19,7 +19,8 @@ public class Server {
         userService = new UserService(new MemoryAuthDAO(), new MemoryUserDAO());
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
-                .post("/user", this::register);
+                .post("/user", this::register)
+                .exception();
 
         // Register your endpoints and exception handlers here.
 
@@ -32,6 +33,10 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    private void exceptionHandler() {
+
     }
 
     private void register(Context ctx) throws DataAccessException {
