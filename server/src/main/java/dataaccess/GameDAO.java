@@ -12,11 +12,11 @@ public class GameDAO {
         throw new RuntimeException("Not implemented");
     }
 
-    public GameData getGameByGameID(String gameID) {
+    public GameData getGameByGameID(String gameID) throws DataAccessException {
         throw new RuntimeException("Not implemented");
     }
 
-    public void updateWhitePlayer(String gameID, String whiteUsername) {
+    public void updateWhitePlayer(String gameID, String whiteUsername) throws DataAccessException {
         throw new RuntimeException("Not implemented");
     }
 
