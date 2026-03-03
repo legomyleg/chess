@@ -3,7 +3,12 @@ package dataaccess;
 import chess.ChessGame;
 import model.GameData;
 
+import java.util.Map;
+
 public class MemoryGameDAO implements GameDAO {
+    private Map<String, GameData> gameDataByGameName;
+    private Map<String, GameData> getGameDataByGameID;
+
     @Override
     public void createGame(GameData gameData) throws DataAccessException {
 
@@ -42,5 +47,11 @@ public class MemoryGameDAO implements GameDAO {
     @Override
     public void deleteGame(String gameID) throws DataAccessException {
 
+    }
+
+    @Override
+    public void deleteAll() {
+        gameDataByGameName.clear();
+        getGameDataByGameID.clear();
     }
 }

@@ -86,4 +86,10 @@ public class MemoryAuthDAO implements AuthDOA {
         authDataByToken.remove(authData.authToken());
         authDataByUsername.remove(username);
     }
+
+    @Override
+    public void deleteAll() {
+        authDataByUsername.clear();
+        authDataByToken.clear();
+    }
 }

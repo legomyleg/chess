@@ -14,4 +14,6 @@ public interface AuthDOA {
     void deleteAuthByToken(String authToken) throws DataAccessException;
 
     void deleteAuthByUsername(String username) throws DataAccessException;
+
+    void deleteAll();
 }
