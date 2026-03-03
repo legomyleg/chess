@@ -10,7 +10,7 @@ import result.RegisterResult;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserServiceTest {
+class RegisterServiceTest {
 
     @Test
     void registerSucceeds() {

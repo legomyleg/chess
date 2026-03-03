@@ -12,10 +12,10 @@ import static exception.ResponseException.Code.ClientError;
 
 public class RegisterService {
     private final UserDAO userDAO;
-    private final AuthDOA authDOA;
+    private final AuthDAO authDAO;
 
-    public RegisterService(AuthDOA authDOA, UserDAO userDAO) {
-        this.authDOA = authDOA;
+    public RegisterService(AuthDAO authDAO, UserDAO userDAO) {
+        this.authDAO = authDAO;
         this.userDAO = userDAO;
     }
 
@@ -27,7 +27,7 @@ public class RegisterService {
         AuthData authData = null;
         try {
             userDAO.createUser(userData);
-            authData = authDOA.createAuth(request.username());
+            authData = authDAO.createAuth(request.username());
         } catch (DataAccessException e) {
             throw new AlreadyTakenException(ClientError, "Username already taken.");
         }

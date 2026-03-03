@@ -1,7 +1,5 @@
 package dataaccess;
 
-import exception.AlreadyAuthenticatedException;
-import exception.NotAuthenticatedException;
 import model.AuthData;
 
 import java.util.HashMap;
@@ -9,7 +7,7 @@ import java.util.Map;
 
 import java.util.UUID;
 
-public class MemoryAuthDAO implements AuthDOA {
+public class MemoryAuthDAO implements AuthDAO {
     Map<String, AuthData> authDataByUsername;
     Map<String, AuthData> authDataByToken;
 

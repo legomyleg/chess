@@ -1,6 +1,6 @@
 package service;
 
-import dataaccess.AuthDOA;
+import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
 import exception.AlreadyAuthenticatedException;
@@ -15,11 +15,11 @@ import result.LoginResult;
 
 public class LoginService {
     private final UserDAO userDAO;
-    private final AuthDOA authDOA;
+    private final AuthDAO authDAO;
 
-    public LoginService(UserDAO userDAO, AuthDOA authDOA) {
+    public LoginService(UserDAO userDAO, AuthDAO authDAO) {
         this.userDAO = userDAO;
-        this.authDOA = authDOA;
+        this.authDAO = authDAO;
     }
 
     public LoginResult login(LoginRequest request) throws ResponseException {
@@ -40,7 +40,7 @@ public class LoginService {
 
         AuthData authData = null;
         try {
-            authData = authDOA.createAuth(username);
+            authData = authDAO.createAuth(username);
         } catch (DataAccessException e) {
             throw new AlreadyAuthenticatedException(Code.ClientError, "Already logged in.");
         }
