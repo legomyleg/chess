@@ -29,7 +29,7 @@ public class MemoryAuthDAO implements AuthDOA {
         }
 
         String authToken = generateToken();
-        var authData = new AuthData(username, authToken);
+        var authData = new AuthData(authToken, username);
 
         authDataByUsername.put(username, authData);
         authDataByToken.put(authToken, authData);
