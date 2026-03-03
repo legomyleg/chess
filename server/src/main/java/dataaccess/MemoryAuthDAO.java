@@ -1,5 +1,7 @@
 package dataaccess;
 
+import exception.AlreadyAuthenticatedException;
+import exception.NotAuthenticatedException;
 import model.AuthData;
 
 import java.util.HashMap;
@@ -23,7 +25,7 @@ public class MemoryAuthDAO implements AuthDOA {
     @Override
     public AuthData createAuth(String username) throws DataAccessException {
         if (authDataByUsername.get(username) != null) {
-            throw new AlreadyAuthenticatedException("User already authenticated.");
+            throw new DataAccessException("User already authenticated.");
         }
 
         String authToken = generateToken();
@@ -40,7 +42,7 @@ public class MemoryAuthDAO implements AuthDOA {
 
         var authData = authDataByToken.get(authToken);
         if (authData == null) {
-            throw new NotAuthenticatedException("Authentication token does not exist.");
+            throw new DataAccessException("Authentication token does not exist.");
         }
 
         return authData;
@@ -50,7 +52,7 @@ public class MemoryAuthDAO implements AuthDOA {
     public AuthData getAuthByUsername(String username) throws DataAccessException {
         var authData = authDataByUsername.get(username);
         if (authData == null) {
-            throw new NotAuthenticatedException("User not authenticated.");
+            throw new DataAccessException("User not authenticated.");
         }
 
         return authData;
@@ -59,7 +61,7 @@ public class MemoryAuthDAO implements AuthDOA {
     @Override
     public void updateAuth(String newToken, String username) throws DataAccessException {
         if (authDataByUsername.get(username) == null) {
-            throw new NotAuthenticatedException("User authentication does not already exist.");
+            throw new DataAccessException("User authentication does not already exist.");
         }
         authDataByUsername.replace(username, new AuthData(newToken, username));
     }
@@ -68,7 +70,7 @@ public class MemoryAuthDAO implements AuthDOA {
     public void deleteAuthByToken(String authToken) throws DataAccessException {
         var authData = authDataByToken.get(authToken);
         if (authData == null) {
-            throw new NotAuthenticatedException("Cannot delete AuthData for unauthenticated user.");
+            throw new DataAccessException("Cannot delete AuthData for unauthenticated user.");
         }
         authDataByToken.remove(authToken);
         authDataByUsername.remove(authData.username());
@@ -78,7 +80,7 @@ public class MemoryAuthDAO implements AuthDOA {
     public void deleteAuthByUsername(String username) throws DataAccessException {
         var authData = authDataByUsername.get(username);
         if (authData == null) {
-            throw new NotAuthenticatedException("Cannot delete AuthData for unauthenticated user.");
+            throw new DataAccessException("Cannot delete AuthData for unauthenticated user.");
         }
 
         authDataByToken.remove(authData.authToken());

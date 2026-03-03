@@ -1,10 +1,14 @@
 package service;
 
 import dataaccess.*;
+import exception.AlreadyTakenException;
+import exception.ResponseException;
 import model.AuthData;
 import model.UserData;
 import request.RegisterRequest;
 import result.RegisterResult;
+
+import static exception.ResponseException.Code.ClientError;
 
 public class UserService {
     private final UserDAO userDAO;
@@ -16,18 +20,17 @@ public class UserService {
     }
 
 
-    public RegisterResult register(RegisterRequest registerRequest) throws DataAccessException {
-
-        UserData user = userDAO.getUser(registerRequest.username());
-
-        if (user != null) {
-            throw new AlreadyTakenException("Username already taken.");
-        }
+    public RegisterResult register(RegisterRequest registerRequest) throws ResponseException {
 
         var userData = new UserData(registerRequest.username(), registerRequest.password(), registerRequest.email());
-        userDAO.createUser(userData);
 
-        AuthData authData = authDOA.createAuth(userData.username());
+        AuthData authData = null;
+        try {
+            userDAO.createUser(userData);
+            authData = authDOA.createAuth(registerRequest.username());
+        } catch (DataAccessException e) {
+            throw new AlreadyTakenException(ClientError, "Username already taken.");
+        }
 
         return new RegisterResult(userData.username(), authData.authToken());
     }

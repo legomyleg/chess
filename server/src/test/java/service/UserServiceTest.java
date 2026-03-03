@@ -1,9 +1,10 @@
 package service;
 
-import dataaccess.AlreadyTakenException;
+import exception.AlreadyTakenException;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryUserDAO;
+import exception.ResponseException;
 import org.junit.jupiter.api.Test;
 import request.RegisterRequest;
 import result.RegisterResult;
@@ -28,8 +29,8 @@ class UserServiceTest {
 
         try {
             result = service.register(registerRequest);
-        } catch (DataAccessException e) {
-            throw new AssertionError("Register should not throw error.");
+        } catch (ResponseException e) {
+            throw new AssertionError(e.getMessage());
         }
 
         assertEquals(username, result.username());

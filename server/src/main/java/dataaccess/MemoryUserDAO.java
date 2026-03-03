@@ -1,9 +1,12 @@
 package dataaccess;
 
+import exception.UserDoesNotExistException;
 import model.UserData;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static exception.ResponseException.Code.ClientError;
 
 public class MemoryUserDAO implements UserDAO {
     Map<String, UserData> users;
@@ -25,7 +28,7 @@ public class MemoryUserDAO implements UserDAO {
     @Override
     public void deleteUser(String username) throws DataAccessException {
         if (users.get(username) == null) {
-            throw new UserDoesNotExistException("User does not exist.");
+            throw new DataAccessException("User does not exist.");
         }
         users.remove(username);
     }
