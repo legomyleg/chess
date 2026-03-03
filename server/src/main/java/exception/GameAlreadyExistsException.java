@@ -1,7 +1,7 @@
 package exception;
 
 public class GameAlreadyExistsException extends ResponseException {
-    public GameAlreadyExistsException(ResponseException.Code code, String message) {
-        super(code, message);
+    public GameAlreadyExistsException(String message) {
+        super(403, message);
     }
 }

@@ -16,7 +16,7 @@ public class LogoutService {
         try {
             authDAO.deleteAuthByToken(authToken);
         } catch (DataAccessException e) {
-            throw new NotAuthenticatedException(ResponseException.Code.ClientError,"Invalid authToken.");
+            throw new NotAuthenticatedException("Error: invalid auth token");
         }
     }
 

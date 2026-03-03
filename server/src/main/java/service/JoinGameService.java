@@ -27,7 +27,7 @@ public class JoinGameService {
         try {
             authData = authDAO.getAuthByToken(authToken);
         } catch (DataAccessException e) {
-            throw new NotAuthenticatedException(ResponseException.Code.ClientError, "User not authenticated.");
+            throw new NotAuthenticatedException("Error: user not authenticated");
         }
 
         String username = authData.username();
@@ -38,12 +38,12 @@ public class JoinGameService {
         try {
             gameData = gameDAO.getGameByGameID(gameID);
         } catch (DataAccessException e) {
-            throw new GameNotFoundException(ResponseException.Code.ClientError, "Game not found");
+            throw new GameNotFoundException("Error: game not found");
         }
 
         String neededSpot = (playerColor == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
         if (neededSpot != null) {
-            throw new AlreadyTakenException(ResponseException.Code.ClientError, "Color not available.");
+            throw new AlreadyTakenException("Error: color not available");
         }
 
         try {
@@ -53,7 +53,7 @@ public class JoinGameService {
                 gameDAO.updateBlackPlayer(gameID, username);
             }
         } catch (DataAccessException e) {
-            throw new ResponseException(ResponseException.Code.ServerError, "Could not add player.");
+            throw new ResponseException(500, "Error: could not add player");
         }
 
     }

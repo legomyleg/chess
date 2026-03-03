@@ -21,7 +21,7 @@ public class ListGamesService {
         try {
             authDAO.getAuthByToken(authToken);
         } catch (DataAccessException e) {
-            throw new NotAuthenticatedException(ResponseException.Code.ClientError, "User not authenticated");
+            throw new NotAuthenticatedException("Error: user not authenticated");
         }
 
         return new GameListResult(gameDAO.listAllGames());

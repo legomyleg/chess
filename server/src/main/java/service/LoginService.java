@@ -3,11 +3,9 @@ package service;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
-import exception.AlreadyAuthenticatedException;
 import exception.IncorrectPasswordException;
 import exception.IncorrectUsernameException;
 import exception.ResponseException;
-import exception.ResponseException.Code;
 import model.AuthData;
 import model.UserData;
 import request.LoginRequest;
@@ -31,22 +29,20 @@ public class LoginService {
         try {
             userData = userDAO.getUser(username);
         } catch (DataAccessException e) {
-            throw new IncorrectUsernameException(Code.ClientError, "Username incorrect.");
+            throw new IncorrectUsernameException("Error: username incorrect");
         }
 
         if (!userData.password().equals(password)) {
-            throw new IncorrectPasswordException(Code.ClientError, "Incorrect password.");
+            throw new IncorrectPasswordException("Error: incorrect password");
         }
 
         AuthData authData = null;
         try {
             authData = authDAO.createAuth(username);
         } catch (DataAccessException e) {
-            throw new AlreadyAuthenticatedException(Code.ClientError, "Already logged in.");
+            throw new ResponseException(500, "Error: could not create session");
         }
 
-        var result = new LoginResult(username, authData.authToken());
-
-        return result;
+        return new LoginResult(username, authData.authToken());
     }
 }

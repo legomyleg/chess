@@ -8,8 +8,6 @@ import model.UserData;
 import request.RegisterRequest;
 import result.RegisterResult;
 
-import static exception.ResponseException.Code.ClientError;
-
 public class RegisterService {
     private final UserDAO userDAO;
     private final AuthDAO authDAO;
@@ -29,7 +27,7 @@ public class RegisterService {
             userDAO.createUser(userData);
             authData = authDAO.createAuth(request.username());
         } catch (DataAccessException e) {
-            throw new AlreadyTakenException(ClientError, "Username already taken.");
+            throw new AlreadyTakenException("Error: username already taken");
         }
 
         return new RegisterResult(userData.username(), authData.authToken());

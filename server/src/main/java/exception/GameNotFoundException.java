@@ -1,7 +1,7 @@
 package exception;
 
 public class GameNotFoundException extends ResponseException {
-    public GameNotFoundException(ResponseException.Code code, String message) {
-        super(code, message);
+    public GameNotFoundException(String message) {
+        super(400, message);
     }
 }

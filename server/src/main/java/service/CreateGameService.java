@@ -23,14 +23,14 @@ public class CreateGameService {
         try {
             authDAO.getAuthByToken(authToken);
         } catch (DataAccessException e) {
-            throw new NotAuthenticatedException(ResponseException.Code.ClientError, "User not authenticated.");
+            throw new NotAuthenticatedException("Error: user not authenticated");
         }
 
         try {
             Integer gameID = gameDAO.createGame(request.gameName());
             return new CreateGameResult(gameID);
         } catch (DataAccessException e) {
-            throw new GameAlreadyExistsException(ResponseException.Code.ClientError, e.getMessage());
+            throw new GameAlreadyExistsException("Error: game already exists");
         }
     }
 }

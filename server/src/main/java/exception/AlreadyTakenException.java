@@ -1,9 +1,7 @@
 package exception;
 
-import dataaccess.DataAccessException;
-
 public class AlreadyTakenException extends ResponseException {
-    public AlreadyTakenException(Code code, String message) {
-        super(code, message);
+    public AlreadyTakenException(String message) {
+        super(403, message);
     }
 }
