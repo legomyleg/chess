@@ -1,6 +1,6 @@
 package result;
 
 public record CreateGameResult(
-        String gameID
+        Integer gameID
 ) {
 }

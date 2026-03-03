@@ -3,22 +3,26 @@ package dataaccess;
 import chess.ChessGame;
 import model.GameData;
 
+import java.util.Collection;
+
 public interface GameDAO {
-    void createGame(GameData gameData) throws DataAccessException;
+    Integer createGame(String gameName) throws DataAccessException;
 
     GameData getGameByGameName(String gameName) throws DataAccessException;
 
-    GameData getGameByGameID(String gameID) throws DataAccessException;
+    GameData getGameByGameID(Integer gameID) throws DataAccessException;
 
-    void updateWhitePlayer(String gameID, String whiteUsername) throws DataAccessException;
+    Collection<GameData> listAllGames();
 
-    void updateBlackPlayer(String gameID, String blackUsername) throws DataAccessException;
+    void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException;
 
-    void updateGame(String gameID, ChessGame newGame) throws DataAccessException;
+    void updateBlackPlayer(Integer gameID, String blackUsername) throws DataAccessException;
 
-    void updateGameName(String gameID, String gameName) throws DataAccessException ;
+    void updateGame(Integer gameID, ChessGame newGame) throws DataAccessException;
 
-    void deleteGame(String gameID) throws DataAccessException;
+    void updateGameName(Integer gameID, String gameName) throws DataAccessException ;
+
+    void deleteGame(Integer gameID) throws DataAccessException;
 
     void deleteAll();
 }

@@ -7,13 +7,13 @@ import dataaccess.MemoryUserDAO;
 import exception.ResponseException;
 import io.javalin.*;
 import io.javalin.http.Context;
+import request.CreateGameRequest;
 import request.LoginRequest;
 import request.RegisterRequest;
+import result.CreateGameResult;
+import result.GameListResult;
 import result.RegisterResult;
-import service.ClearService;
-import service.LoginService;
-import service.LogoutService;
-import service.RegisterService;
+import service.*;
 
 public class Server {
 
@@ -22,6 +22,8 @@ public class Server {
     private final ClearService clearService;
     private final LoginService loginService;
     private final LogoutService logoutService;
+    private final ListGamesService listGamesService;
+    private final CreateGameService createGameService;
 
     public Server() {
         var authDAO = new MemoryAuthDAO();
@@ -31,10 +33,13 @@ public class Server {
         clearService = new ClearService(gameDAO, authDAO, userDAO);
         loginService = new LoginService(userDAO, authDAO);
         logoutService = new LogoutService(authDAO);
+        listGamesService = new ListGamesService(authDAO, gameDAO);
+        createGameService = new CreateGameService(authDAO, gameDAO);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
                 .post("/session", this::login)
+                .get("/game", this::listGames)
                 .delete("/session", this::logout)
                 .delete("/db", this::deleteAllData)
                 .exception(ResponseException.class, this::exceptionHandler);
@@ -79,6 +84,22 @@ public class Server {
         ctx.status(200);
 
     }
+
+    private void listGames(Context ctx) throws ResponseException {
+        String authToken = ctx.header("authorization");
+        GameListResult result = listGamesService.listGames(authToken);
+        ctx.result(new Gson().toJson(result));
+    }
+
+    private void createGame(Context ctx) throws ResponseException {
+        String authToken = ctx.header("authorization");
+        var request = new Gson().fromJson(ctx.body(), CreateGameRequest.class);
+        CreateGameResult result = createGameService.createGame(request, authToken);
+
+        ctx.result(new Gson().toJson(result));
+    }
+
+
 
     private void deleteAllData(Context ctx) {
         clearService.deleteAllData();
