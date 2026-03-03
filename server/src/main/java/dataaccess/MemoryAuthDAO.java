@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.UUID;
 
 public class MemoryAuthDAO implements AuthDAO {
-    Map<String, AuthData> authDataByUsername;
     Map<String, AuthData> authDataByToken;
 
     public MemoryAuthDAO() {
-        authDataByUsername = new HashMap<>();
         authDataByToken = new HashMap<>();
     }
 
@@ -26,7 +24,6 @@ public class MemoryAuthDAO implements AuthDAO {
         String authToken = generateToken();
         var authData = new AuthData(authToken, username);
 
-        authDataByUsername.put(username, authData);
         authDataByToken.put(authToken, authData);
 
         return authData;
@@ -44,47 +41,16 @@ public class MemoryAuthDAO implements AuthDAO {
     }
 
     @Override
-    public AuthData getAuthByUsername(String username) throws DataAccessException {
-        var authData = authDataByUsername.get(username);
-        if (authData == null) {
-            throw new DataAccessException("User not authenticated.");
-        }
-
-        return authData;
-    }
-
-    @Override
-    public void updateAuth(String newToken, String username) throws DataAccessException {
-        if (authDataByUsername.get(username) == null) {
-            throw new DataAccessException("User authentication does not already exist.");
-        }
-        authDataByUsername.replace(username, new AuthData(newToken, username));
-    }
-
-    @Override
     public void deleteAuthByToken(String authToken) throws DataAccessException {
         var authData = authDataByToken.get(authToken);
         if (authData == null) {
             throw new DataAccessException("Cannot delete AuthData for unauthenticated user.");
         }
         authDataByToken.remove(authToken);
-        authDataByUsername.remove(authData.username());
-    }
-
-    @Override
-    public void deleteAuthByUsername(String username) throws DataAccessException {
-        var authData = authDataByUsername.get(username);
-        if (authData == null) {
-            throw new DataAccessException("Cannot delete AuthData for unauthenticated user.");
-        }
-
-        authDataByToken.remove(authData.authToken());
-        authDataByUsername.remove(username);
     }
 
     @Override
     public void deleteAll() {
-        authDataByUsername.clear();
         authDataByToken.clear();
     }
 }
