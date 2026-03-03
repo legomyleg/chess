@@ -31,14 +31,6 @@ public class MemoryUserDAO implements UserDAO {
     }
 
     @Override
-    public void deleteUser(String username) throws DataAccessException {
-        if (users.get(username) == null) {
-            throw new DataAccessException("User does not exist.");
-        }
-        users.remove(username);
-    }
-
-    @Override
     public void deleteAll() {
         users.clear();
     }

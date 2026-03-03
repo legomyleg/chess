@@ -1,7 +1,5 @@
 package chess;
 
-import chess.PieceMoves.MoveCalculator;
-
 import java.util.*;
 
 /**
@@ -228,14 +226,6 @@ public class ChessGame {
         }
 
         return positionList;
-    }
-
-    public ChessPosition getSinglePiece(ChessPiece.PieceType type, TeamColor color) {
-        List<ChessPosition> pieceArray = getPiecePositions(type, color);
-        if (pieceArray.isEmpty()) {
-            throw new RuntimeException("Error in getSinglePiece. Piece %s, %s not found.".formatted(type, color));
-        }
-        return pieceArray.get(0);
     }
 
     public Collection<ChessMove> teamAttacks(TeamColor team) {

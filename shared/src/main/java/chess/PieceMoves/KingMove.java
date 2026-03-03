@@ -1,4 +1,4 @@
-package chess.PieceMoves;
+package chess.piecemoves;
 
 import chess.ChessBoard;
 import chess.ChessMove;
@@ -10,11 +10,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class KingMove implements MoveCalculator {
-
-    @Override
-    public boolean checkMove(ChessBoard board, ChessPosition startPosition, ChessPosition endPosition) {
-        return false;
-    }
 
     @Override
     public Collection<ChessMove> getMoves(ChessBoard board, ChessPosition position) {

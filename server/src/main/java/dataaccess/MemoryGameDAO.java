@@ -90,43 +90,6 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     @Override
-    public void updateGame(Integer gameID, ChessGame newGame) throws DataAccessException {
-        GameData gameData = getGameByGameID(gameID);
-        updateGameData(gameID, new GameData(
-                gameData.gameID(),
-                gameData.whiteUsername(),
-                gameData.blackUsername(),
-                gameData.gameName(),
-                newGame
-        ));
-    }
-
-    @Override
-    public void updateGameName(Integer gameID, String gameName) throws DataAccessException {
-        GameData gameData = getGameByGameID(gameID);
-        updateGameData(gameID, new GameData(
-                gameData.gameID(),
-                gameData.whiteUsername(),
-                gameData.blackUsername(),
-                gameName,
-                gameData.game()
-        ));
-    }
-
-    @Override
-    public void deleteGame(Integer gameID) throws DataAccessException {
-        var gameData = gameDataByGameID.get(gameID);
-        if (gameData == null) {
-            throw new DataAccessException("Game not found.");
-        }
-        String gameName = gameData.gameName();
-
-        gameDataByGameID.remove(gameID);
-        gameDataByGameName.remove(gameName);
-
-    }
-
-    @Override
     public void deleteAll() {
         gameDataByGameName.clear();
         gameDataByGameID.clear();

@@ -1,4 +1,4 @@
-package chess.PieceMoves;
+package chess.piecemoves;
 
 import chess.*;
 

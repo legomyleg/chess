@@ -50,7 +50,9 @@ public class ChessPosition {
 
             @Override
             public ChessPosition next() {
-                if (!hasNext()) throw new NoSuchElementException();
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 ChessPosition position = new ChessPosition(row, col);
                 col++;
                 if (col == 9) {col = 1; row++;}
