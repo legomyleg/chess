@@ -10,11 +10,11 @@ import result.RegisterResult;
 
 import static exception.ResponseException.Code.ClientError;
 
-public class UserService {
+public class RegisterService {
     private final UserDAO userDAO;
     private final AuthDOA authDOA;
 
-    public UserService(AuthDOA authDOA, UserDAO userDAO) {
+    public RegisterService(AuthDOA authDOA, UserDAO userDAO) {
         this.authDOA = authDOA;
         this.userDAO = userDAO;
     }

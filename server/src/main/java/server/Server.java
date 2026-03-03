@@ -10,19 +10,19 @@ import io.javalin.http.Context;
 import request.RegisterRequest;
 import result.RegisterResult;
 import service.ClearService;
-import service.UserService;
+import service.RegisterService;
 
 public class Server {
 
     private final Javalin javalin;
-    private final UserService userService;
+    private final RegisterService userService;
     private final ClearService clearService;
 
     public Server() {
         var authDAO = new MemoryAuthDAO();
         var gameDAO = new MemoryGameDAO();
         var userDAO = new MemoryUserDAO();
-        userService = new UserService(authDAO, userDAO);
+        userService = new RegisterService(authDAO, userDAO);
         clearService = new ClearService(gameDAO, authDAO, userDAO);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
@@ -56,7 +56,9 @@ public class Server {
         ctx.result(new Gson().toJson(result));
     }
 
-    private void login(Conte)
+    private void login(Context ctx) throws ResponseException {
+
+    }
 
     private void deleteAllData(Context ctx) {
         clearService.deleteAllData();

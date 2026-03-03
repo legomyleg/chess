@@ -1,7 +1,6 @@
 package service;
 
 import exception.AlreadyTakenException;
-import dataaccess.DataAccessException;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryUserDAO;
 import exception.ResponseException;
@@ -18,7 +17,7 @@ class UserServiceTest {
         var memoryAuthDAO = new MemoryAuthDAO();
         var memoryUserDAO = new MemoryUserDAO();
 
-        var service = new UserService(memoryAuthDAO, memoryUserDAO);
+        var service = new RegisterService(memoryAuthDAO, memoryUserDAO);
 
         String username = "pboi";
         String password = "1234";
@@ -43,7 +42,7 @@ class UserServiceTest {
         var memoryAuthDAO = new MemoryAuthDAO();
         var memoryUserDAO = new MemoryUserDAO();
 
-        var service = new UserService(memoryAuthDAO, memoryUserDAO);
+        var service = new RegisterService(memoryAuthDAO, memoryUserDAO);
 
         String username = "pboi";
         String password = "1234";
