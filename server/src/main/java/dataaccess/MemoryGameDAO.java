@@ -70,6 +70,7 @@ public class MemoryGameDAO implements GameDAO {
         );
 
         gameDataByGameID.replace(gameID, newGameData);
+        gameDataByGameName.replace(newGameData.gameName(), newGameData);
     }
 
     @Override
@@ -87,6 +88,7 @@ public class MemoryGameDAO implements GameDAO {
         );
 
         gameDataByGameID.replace(gameID, newGameData);
+        gameDataByGameName.replace(newGameData.gameName(), newGameData);
     }
 
     @Override
@@ -104,6 +106,7 @@ public class MemoryGameDAO implements GameDAO {
         );
 
         gameDataByGameID.replace(gameID, newGameData);
+        gameDataByGameName.replace(newGameData.gameName(), newGameData);
     }
 
     @Override
@@ -121,6 +124,8 @@ public class MemoryGameDAO implements GameDAO {
         );
 
         gameDataByGameID.replace(gameID, newGameData);
+        gameDataByGameName.remove(gameData.gameName());
+        gameDataByGameName.put(newGameData.gameName(), newGameData);
     }
 
     @Override

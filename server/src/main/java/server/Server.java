@@ -113,6 +113,6 @@ public class Server {
 
     private void deleteAllData(Context ctx) {
         clearService.deleteAllData();
-        ctx.status(204);
+        ctx.status(200);
     }
 }
