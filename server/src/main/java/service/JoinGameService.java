@@ -5,6 +5,7 @@ import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import exception.AlreadyTakenException;
+import exception.BadRequestException;
 import exception.GameNotFoundException;
 import exception.NotAuthenticatedException;
 import exception.ResponseException;
@@ -22,6 +23,10 @@ public class JoinGameService {
     }
 
     public void joinGame(JoinGameRequest request, String authToken) throws ResponseException {
+
+        if (request.playerColor() == null) {
+            throw new BadRequestException("Error: Bad request");
+        }
 
         AuthData authData = null;
         try {

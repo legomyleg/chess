@@ -3,6 +3,7 @@ package service;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
+import exception.BadRequestException;
 import exception.GameAlreadyExistsException;
 import exception.NotAuthenticatedException;
 import exception.ResponseException;
@@ -19,6 +20,10 @@ public class CreateGameService {
     }
 
     public CreateGameResult createGame(CreateGameRequest request, String authToken) throws ResponseException {
+
+        if (request.gameName() == null) {
+            throw new BadRequestException("Error: Bad request");
+        }
 
         try {
             authDAO.getAuthByToken(authToken);

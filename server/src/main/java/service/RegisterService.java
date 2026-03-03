@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.*;
 import exception.AlreadyTakenException;
+import exception.BadRequestException;
 import exception.ResponseException;
 import model.AuthData;
 import model.UserData;
@@ -20,16 +21,23 @@ public class RegisterService {
 
     public RegisterResult register(RegisterRequest request) throws ResponseException {
 
-        var userData = new UserData(request.username(), request.password(), request.email());
+        String username = request.username();
+        String password = request.password();
+        String email = request.email();
+        var userData = new UserData(username, password, email);
+
+        if (username == null || password == null || email == null) {
+            throw new BadRequestException("Error: Bad request");
+        }
 
         AuthData authData = null;
         try {
             userDAO.createUser(userData);
-            authData = authDAO.createAuth(request.username());
+            authData = authDAO.createAuth(username);
         } catch (DataAccessException e) {
             throw new AlreadyTakenException("Error: username already taken");
         }
 
-        return new RegisterResult(userData.username(), authData.authToken());
+        return new RegisterResult(username, authData.authToken());
     }
 }

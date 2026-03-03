@@ -3,6 +3,7 @@ package service;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
+import exception.BadRequestException;
 import exception.IncorrectPasswordException;
 import exception.IncorrectUsernameException;
 import exception.ResponseException;
@@ -24,6 +25,10 @@ public class LoginService {
 
         String username = request.username();
         String password = request.password();
+
+        if (username == null || password == null) {
+            throw new BadRequestException("Error: Bad request");
+        }
 
         UserData userData = null;
         try {
