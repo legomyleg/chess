@@ -20,14 +20,14 @@ public class RegisterService {
     }
 
 
-    public RegisterResult register(RegisterRequest registerRequest) throws ResponseException {
+    public RegisterResult register(RegisterRequest request) throws ResponseException {
 
-        var userData = new UserData(registerRequest.username(), registerRequest.password(), registerRequest.email());
+        var userData = new UserData(request.username(), request.password(), request.email());
 
         AuthData authData = null;
         try {
             userDAO.createUser(userData);
-            authData = authDOA.createAuth(registerRequest.username());
+            authData = authDOA.createAuth(request.username());
         } catch (DataAccessException e) {
             throw new AlreadyTakenException(ClientError, "Username already taken.");
         }

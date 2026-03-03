@@ -27,7 +27,7 @@ public class Server {
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
-                .post("/login", this::login)
+                .post("/session", this::login)
                 .delete("/db", this::deleteAllData)
                 .exception(ResponseException.class, this::exceptionHandler);
 
