@@ -13,40 +13,8 @@ public class RookMove implements MoveCalculator {
 
     @Override
     public Collection<ChessMove> getMoves(ChessBoard board, ChessPosition position) {
-        List<ChessMove> moves = new ArrayList<>();
-
-        ChessPiece piece = board.getPiece(position);
-        if (piece.getPieceType() != ChessPiece.PieceType.ROOK && piece.getPieceType() != ChessPiece.PieceType.QUEEN) {
-            throw new RuntimeException("Piece " + piece + "is not rook, RookMove cannot calculate move.");
-        }
-
         int[] rowDeltas = {0, 1, 0, -1};
         int[] colDeltas = {1, 0, -1, 0};
-
-        for (int t = 0; t < 4; t++) {
-
-            for (int i = 1; i <= 8; i++) {
-
-                int rowIncrease = i * rowDeltas[t];
-                int colIncrease = i * colDeltas[t];
-                ChessPosition newPosition = new ChessPosition(position.getRow() + rowIncrease, position.getColumn() + colIncrease);
-
-                if (newPosition.outOfBounds()) {
-                    break;
-                }
-
-                ChessPiece occupier = board.getPiece(newPosition);
-
-                if (occupier != null) {
-                    if (occupier.getTeamColor() != piece.getTeamColor()) {
-                        moves.add(new ChessMove(position, newPosition));
-                    }
-                    break;
-                }
-                moves.add(new ChessMove(position, newPosition));
-            }
-        }
-
-        return moves;
+        return MoveCalculator.getLongMoves(board, position, rowDeltas, colDeltas);
     }
 }
