@@ -8,6 +8,7 @@ import exception.ResponseException;
 import io.javalin.*;
 import io.javalin.http.Context;
 import request.CreateGameRequest;
+import request.JoinGameRequest;
 import request.LoginRequest;
 import request.RegisterRequest;
 import result.CreateGameResult;
@@ -24,6 +25,7 @@ public class Server {
     private final LogoutService logoutService;
     private final ListGamesService listGamesService;
     private final CreateGameService createGameService;
+    private final JoinGameService joinGameService;
 
     public Server() {
         var authDAO = new MemoryAuthDAO();
@@ -35,12 +37,15 @@ public class Server {
         logoutService = new LogoutService(authDAO);
         listGamesService = new ListGamesService(authDAO, gameDAO);
         createGameService = new CreateGameService(authDAO, gameDAO);
+        joinGameService = new JoinGameService(authDAO, gameDAO);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
                 .post("/session", this::login)
                 .get("/game", this::listGames)
                 .delete("/session", this::logout)
+                .post("/game", this::createGame)
+                .put("/game", this::joinGame)
                 .delete("/db", this::deleteAllData)
                 .exception(ResponseException.class, this::exceptionHandler);
 
@@ -99,7 +104,12 @@ public class Server {
         ctx.result(new Gson().toJson(result));
     }
 
-
+    private void joinGame(Context ctx) throws ResponseException {
+        String authToken = ctx.header("authorization");
+        var request = new Gson().fromJson(ctx.body(), JoinGameRequest.class);
+        joinGameService.joinGame(request, authToken);
+        ctx.status(200);
+    }
 
     private void deleteAllData(Context ctx) {
         clearService.deleteAllData();

@@ -22,9 +22,6 @@ public class MemoryAuthDAO implements AuthDAO {
 
     @Override
     public AuthData createAuth(String username) throws DataAccessException {
-        if (authDataByUsername.get(username) != null) {
-            throw new DataAccessException("User already authenticated.");
-        }
 
         String authToken = generateToken();
         var authData = new AuthData(authToken, username);

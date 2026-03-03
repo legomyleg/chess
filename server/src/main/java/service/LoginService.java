@@ -34,7 +34,7 @@ public class LoginService {
             throw new IncorrectUsernameException(Code.ClientError, "Username incorrect.");
         }
 
-        if (password != userData.password()) {
+        if (!userData.password().equals(password)) {
             throw new IncorrectPasswordException(Code.ClientError, "Incorrect password.");
         }
 
