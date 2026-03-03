@@ -20,14 +20,15 @@ public class BishopMove implements MoveCalculator {
             throw new RuntimeException("Piece " + piece + " is not bishop, BishopMove cannot calculate move.");
         }
 
+        int[] rowDeltas = {1, 1, -1, -1};
+        int[] colDeltas = {1, -1, -1, 1};
+
         for (int t = 0; t < 4; t++) {
-            int[] incR = {1, 1, -1, -1};
-            int[] incC = {1, -1, -1, 1};
 
             for (int i = 1; i <= 8; i++) {
 
-                int rowIncrease = i * incR[t];
-                int colIncrease = i * incC[t];
+                int rowIncrease = i * rowDeltas[t];
+                int colIncrease = i * colDeltas[t];
                 ChessPosition newPosition = new ChessPosition(position.getRow() + rowIncrease, position.getColumn() + colIncrease);
 
                 if (newPosition.outOfBounds()) {

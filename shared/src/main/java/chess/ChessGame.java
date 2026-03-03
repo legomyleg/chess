@@ -12,6 +12,13 @@ import java.util.*;
  */
 public class ChessGame {
 
+    private static final int BOARD_SIZE = 8;
+    private static final int KING_COL = 5;
+    private static final int CASTLE_LEFT_ROOK_COL = 1;
+    private static final int CASTLE_RIGHT_ROOK_COL = 8;
+    private static final int CASTLE_LEFT_KING_DEST = 3;
+    private static final int CASTLE_RIGHT_KING_DEST = 7;
+
     private TeamColor teamTurn;
     private ChessBoard board;
 
@@ -80,13 +87,13 @@ public class ChessGame {
         if (piece.getPieceType() == ChessPiece.PieceType.KING) {
 
             TeamColor teamColor = piece.getTeamColor();
-            int teamRow = (teamColor == TeamColor.WHITE) ? 1 : 8;
+            int teamRow = (teamColor == TeamColor.WHITE) ? 1 : BOARD_SIZE;
 
             if (canCastleLeft(teamColor)) {
-                validMoves.add(new ChessMove(startPosition, new ChessPosition(teamRow, 3)));
+                validMoves.add(new ChessMove(startPosition, new ChessPosition(teamRow, CASTLE_LEFT_KING_DEST)));
             }
             if (canCastleRight(teamColor)) {
-                validMoves.add(new ChessMove(startPosition, new ChessPosition(teamRow, 7)));
+                validMoves.add(new ChessMove(startPosition, new ChessPosition(teamRow, CASTLE_RIGHT_KING_DEST)));
             }
         }
 
@@ -255,18 +262,10 @@ public class ChessGame {
         return moves;
     }
 
-    public void addEnPassantMoves(ChessBoard board, Collection<ChessMove> moves, ChessPosition startPosition) {
-        throw new RuntimeException("Not Implemented");
-    }
-
-    public void addCastlingMoves(ChessBoard board, Collection<ChessMove> moves, ChessPosition startPosition) {
-        throw new RuntimeException("Not Implemented");
-    }
-
-    public boolean canCastleLeft(TeamColor teamColor) {
-        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : 8;
-        ChessPosition rookPosition = new ChessPosition(teamRow, 1);
-        ChessPosition kingPosition = new ChessPosition(teamRow, 5);
+    private boolean canCastle(TeamColor teamColor, int rookCol, int kingStep) {
+        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : BOARD_SIZE;
+        ChessPosition rookPosition = new ChessPosition(teamRow, rookCol);
+        ChessPosition kingPosition = new ChessPosition(teamRow, KING_COL);
         TeamColor opponentColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
 
         ChessPiece rookPiece = board.getPiece(rookPosition);
@@ -288,101 +287,50 @@ public class ChessGame {
             return false;
         }
 
-        for (int column = kingPosition.getColumn() - 1; column > 1; column--) {
-            ChessPosition position = new ChessPosition(teamRow, column);
-            if (!board.checkClear(position)) {
+        for (int column = KING_COL + kingStep; column != rookCol; column += kingStep) {
+            if (!board.checkClear(new ChessPosition(teamRow, column))) {
                 return false;
             }
         }
 
-        ChessPosition oneOver = new ChessPosition(teamRow, kingPosition.getColumn() - 1);
-        ChessPosition twoOver = new ChessPosition(teamRow, kingPosition.getColumn() - 2);
-        if (attackedSpots.contains(oneOver) || attackedSpots.contains(twoOver)) {
-            return false;
-        }
+        ChessPosition oneOver = new ChessPosition(teamRow, KING_COL + kingStep);
+        ChessPosition twoOver = new ChessPosition(teamRow, KING_COL + kingStep * 2);
+        return !attackedSpots.contains(oneOver) && !attackedSpots.contains(twoOver);
+    }
 
-        return true;
-
+    public boolean canCastleLeft(TeamColor teamColor) {
+        return canCastle(teamColor, CASTLE_LEFT_ROOK_COL, -1);
     }
 
     public boolean canCastleRight(TeamColor teamColor) {
-        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : 8;
-        ChessPosition rookPosition = new ChessPosition(teamRow, 8);
-        ChessPosition kingPosition = new ChessPosition(teamRow, 5);
-        TeamColor opponentColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+        return canCastle(teamColor, CASTLE_RIGHT_ROOK_COL, 1);
+    }
 
+    private void performCastle(TeamColor teamColor, int rookSrcCol, int kingDestCol, int rookDestCol) {
+        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : BOARD_SIZE;
+        ChessPosition rookPosition = new ChessPosition(teamRow, rookSrcCol);
+        ChessPosition kingPosition = new ChessPosition(teamRow, KING_COL);
         ChessPiece rookPiece = board.getPiece(rookPosition);
         ChessPiece kingPiece = board.getPiece(kingPosition);
 
-        Collection<ChessMove> opponentAttacks = teamAttacks(opponentColor);
-        List<ChessPosition> attackedSpots = new ArrayList<>();
-        for (ChessMove move : opponentAttacks) {
-            attackedSpots.add(move.getEndPosition());
-        }
+        board.addPiece(kingPosition, null);
+        board.addPiece(new ChessPosition(teamRow, kingDestCol), kingPiece);
 
-        if (rookPiece == null || rookPiece.getPieceType() != ChessPiece.PieceType.ROOK || attackedSpots.contains(rookPosition)) {
-            return false;
-        }
-        if (kingPiece == null || kingPiece.getPieceType() != ChessPiece.PieceType.KING) {
-            return false;
-        }
-        if (kingPiece.hasMoved() || rookPiece.hasMoved() || isInCheck(teamColor)) {
-            return false;
-        }
+        board.addPiece(rookPosition, null);
+        board.addPiece(new ChessPosition(teamRow, rookDestCol), rookPiece);
 
-        for (int column = kingPosition.getColumn() + 1; column < 8; column++) {
-            ChessPosition position = new ChessPosition(teamRow, column);
-            if (!board.checkClear(position)) {
-                return false;
-            }
-        }
+        kingPiece.setMoved();
+        rookPiece.setMoved();
 
-        ChessPosition oneOver = new ChessPosition(teamRow, kingPosition.getColumn() + 1);
-        ChessPosition twoOver = new ChessPosition(teamRow, kingPosition.getColumn() + 2);
-        if (attackedSpots.contains(oneOver) || attackedSpots.contains(twoOver)) {
-            return false;
-        }
-
-        return true;
-
+        teamTurn = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
 
     public void castleRight(TeamColor teamColor) {
-        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : 8;
-        ChessPosition rookPosition = new ChessPosition(teamRow, 8);
-        ChessPosition kingPosition = new ChessPosition(teamRow, 5);
-        ChessPiece rookPiece = board.getPiece(rookPosition);
-        ChessPiece kingPiece = board.getPiece(kingPosition);
-
-        board.addPiece(kingPosition, null);
-        board.addPiece(new ChessPosition(teamRow, 7), kingPiece);
-
-        board.addPiece(rookPosition, null);
-        board.addPiece(new ChessPosition(teamRow, 6), rookPiece);
-
-        kingPiece.setMoved();
-        rookPiece.setMoved();
-
-        teamTurn = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+        performCastle(teamColor, CASTLE_RIGHT_ROOK_COL, CASTLE_RIGHT_KING_DEST, 6);
     }
 
     public void castleLeft(TeamColor teamColor) {
-        int teamRow = (teamColor == TeamColor.WHITE) ? 1 : 8;
-        ChessPosition rookPosition = new ChessPosition(teamRow, 1);
-        ChessPosition kingPosition = new ChessPosition(teamRow, 5);
-        ChessPiece rookPiece = board.getPiece(rookPosition);
-        ChessPiece kingPiece = board.getPiece(kingPosition);
-
-        board.addPiece(kingPosition, null);
-        board.addPiece(new ChessPosition(teamRow, 3), kingPiece);
-
-        board.addPiece(rookPosition, null);
-        board.addPiece(new ChessPosition(teamRow, 4), rookPiece);
-
-        kingPiece.setMoved();
-        rookPiece.setMoved();
-
-        teamTurn = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+        performCastle(teamColor, CASTLE_LEFT_ROOK_COL, CASTLE_LEFT_KING_DEST, 4);
     }
 
     @Override

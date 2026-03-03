@@ -24,11 +24,12 @@ public class RegisterService {
         String username = request.username();
         String password = request.password();
         String email = request.email();
-        var userData = new UserData(username, password, email);
 
         if (username == null || password == null || email == null) {
             throw new BadRequestException("Error: Bad request");
         }
+
+        var userData = new UserData(username, password, email);
 
         AuthData authData = null;
         try {

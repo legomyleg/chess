@@ -18,8 +18,10 @@ import service.*;
 
 public class Server {
 
+    private static final Gson GSON = new Gson();
+
     private final Javalin javalin;
-    private final RegisterService userService;
+    private final RegisterService registerService;
     private final ClearService clearService;
     private final LoginService loginService;
     private final LogoutService logoutService;
@@ -31,7 +33,7 @@ public class Server {
         var authDAO = new MemoryAuthDAO();
         var gameDAO = new MemoryGameDAO();
         var userDAO = new MemoryUserDAO();
-        userService = new RegisterService(authDAO, userDAO);
+        registerService = new RegisterService(authDAO, userDAO);
         clearService = new ClearService(gameDAO, authDAO, userDAO);
         loginService = new LoginService(userDAO, authDAO);
         logoutService = new LogoutService(authDAO);
@@ -48,8 +50,6 @@ public class Server {
                 .put("/game", this::joinGame)
                 .delete("/db", this::deleteAllData)
                 .exception(ResponseException.class, this::exceptionHandler);
-
-        // Register your endpoints and exception handlers here.
 
     }
 
@@ -69,16 +69,16 @@ public class Server {
 
     private void register(Context ctx) throws ResponseException {
 
-        RegisterRequest request = new Gson().fromJson(ctx.body(), RegisterRequest.class);
-        RegisterResult result = userService.register(request);
-        ctx.result(new Gson().toJson(result));
+        RegisterRequest request = GSON.fromJson(ctx.body(), RegisterRequest.class);
+        RegisterResult result = registerService.register(request);
+        ctx.result(GSON.toJson(result));
     }
 
     private void login(Context ctx) throws ResponseException {
 
-        LoginRequest request = new Gson().fromJson(ctx.body(), LoginRequest.class);
+        LoginRequest request = GSON.fromJson(ctx.body(), LoginRequest.class);
         var result = loginService.login(request);
-        ctx.result(new Gson().toJson(result));
+        ctx.result(GSON.toJson(result));
 
     }
 
@@ -93,20 +93,20 @@ public class Server {
     private void listGames(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
         GameListResult result = listGamesService.listGames(authToken);
-        ctx.result(new Gson().toJson(result));
+        ctx.result(GSON.toJson(result));
     }
 
     private void createGame(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
-        var request = new Gson().fromJson(ctx.body(), CreateGameRequest.class);
+        var request = GSON.fromJson(ctx.body(), CreateGameRequest.class);
         CreateGameResult result = createGameService.createGame(request, authToken);
 
-        ctx.result(new Gson().toJson(result));
+        ctx.result(GSON.toJson(result));
     }
 
     private void joinGame(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
-        var request = new Gson().fromJson(ctx.body(), JoinGameRequest.class);
+        var request = GSON.fromJson(ctx.body(), JoinGameRequest.class);
         joinGameService.joinGame(request, authToken);
         ctx.status(200);
     }

@@ -10,12 +10,12 @@ import java.util.Map;
 public class MemoryGameDAO implements GameDAO {
     private Map<String, GameData> gameDataByGameName;
     private Map<Integer, GameData> gameDataByGameID;
-    private Integer newGameID;
+    private int nextGameID;
 
     public MemoryGameDAO() {
         this.gameDataByGameName = new HashMap<>();
         this.gameDataByGameID = new HashMap<>();
-        newGameID = Integer.valueOf(1);
+        nextGameID = 1;
     }
 
     @Override
@@ -23,7 +23,7 @@ public class MemoryGameDAO implements GameDAO {
         if (gameDataByGameName.get(gameName) != null) {
             throw new DataAccessException("Game already exists.");
         }
-        var gameData = new GameData(newGameID++, null, null, gameName, new ChessGame());
+        var gameData = new GameData(nextGameID++, null, null, gameName, new ChessGame());
         gameDataByGameName.put(gameName, gameData);
         gameDataByGameID.put(gameData.gameID(), gameData);
 
@@ -55,77 +55,62 @@ public class MemoryGameDAO implements GameDAO {
         return gameDataByGameName.values();
     }
 
-    @Override
-    public void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException {
-        var gameData = gameDataByGameID.get(gameID);
-        if (gameData == null) {
+    private void updateGameData(Integer gameID, GameData newGameData) throws DataAccessException {
+        GameData existing = gameDataByGameID.get(gameID);
+        if (existing == null) {
             throw new DataAccessException("Game not found.");
         }
-        var newGameData = new GameData(
+        gameDataByGameID.replace(gameID, newGameData);
+        gameDataByGameName.remove(existing.gameName());
+        gameDataByGameName.put(newGameData.gameName(), newGameData);
+    }
+
+    @Override
+    public void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException {
+        GameData gameData = getGameByGameID(gameID);
+        updateGameData(gameID, new GameData(
                 gameData.gameID(),
                 whiteUsername,
                 gameData.blackUsername(),
                 gameData.gameName(),
                 gameData.game()
-        );
-
-        gameDataByGameID.replace(gameID, newGameData);
-        gameDataByGameName.replace(newGameData.gameName(), newGameData);
+        ));
     }
 
     @Override
     public void updateBlackPlayer(Integer gameID, String blackUsername) throws DataAccessException {
-        var gameData = gameDataByGameID.get(gameID);
-        if (gameData == null) {
-            throw new DataAccessException("Game not found.");
-        }
-        var newGameData = new GameData(
+        GameData gameData = getGameByGameID(gameID);
+        updateGameData(gameID, new GameData(
                 gameData.gameID(),
                 gameData.whiteUsername(),
                 blackUsername,
                 gameData.gameName(),
                 gameData.game()
-        );
-
-        gameDataByGameID.replace(gameID, newGameData);
-        gameDataByGameName.replace(newGameData.gameName(), newGameData);
+        ));
     }
 
     @Override
     public void updateGame(Integer gameID, ChessGame newGame) throws DataAccessException {
-        var gameData = gameDataByGameID.get(gameID);
-        if (gameData == null) {
-            throw new DataAccessException("Game not found.");
-        }
-        var newGameData = new GameData(
+        GameData gameData = getGameByGameID(gameID);
+        updateGameData(gameID, new GameData(
                 gameData.gameID(),
                 gameData.whiteUsername(),
                 gameData.blackUsername(),
                 gameData.gameName(),
                 newGame
-        );
-
-        gameDataByGameID.replace(gameID, newGameData);
-        gameDataByGameName.replace(newGameData.gameName(), newGameData);
+        ));
     }
 
     @Override
     public void updateGameName(Integer gameID, String gameName) throws DataAccessException {
-        var gameData = gameDataByGameID.get(gameID);
-        if (gameData == null) {
-            throw new DataAccessException("Game not found.");
-        }
-        var newGameData = new GameData(
+        GameData gameData = getGameByGameID(gameID);
+        updateGameData(gameID, new GameData(
                 gameData.gameID(),
                 gameData.whiteUsername(),
                 gameData.blackUsername(),
                 gameName,
                 gameData.game()
-        );
-
-        gameDataByGameID.replace(gameID, newGameData);
-        gameDataByGameName.remove(gameData.gameName());
-        gameDataByGameName.put(newGameData.gameName(), newGameData);
+        ));
     }
 
     @Override
