@@ -7,9 +7,12 @@ import dataaccess.MemoryUserDAO;
 import exception.ResponseException;
 import io.javalin.*;
 import io.javalin.http.Context;
+import request.LoginRequest;
 import request.RegisterRequest;
 import result.RegisterResult;
 import service.ClearService;
+import service.LoginService;
+import service.LogoutService;
 import service.RegisterService;
 
 public class Server {
@@ -17,6 +20,8 @@ public class Server {
     private final Javalin javalin;
     private final RegisterService userService;
     private final ClearService clearService;
+    private final LoginService loginService;
+    private final LogoutService logoutService;
 
     public Server() {
         var authDAO = new MemoryAuthDAO();
@@ -24,10 +29,13 @@ public class Server {
         var userDAO = new MemoryUserDAO();
         userService = new RegisterService(authDAO, userDAO);
         clearService = new ClearService(gameDAO, authDAO, userDAO);
+        loginService = new LoginService(userDAO, authDAO);
+        logoutService = new LogoutService(authDAO);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
                 .post("/session", this::login)
+                .delete("/session", this::logout)
                 .delete("/db", this::deleteAllData)
                 .exception(ResponseException.class, this::exceptionHandler);
 
@@ -57,6 +65,18 @@ public class Server {
     }
 
     private void login(Context ctx) throws ResponseException {
+
+        LoginRequest request = new Gson().fromJson(ctx.body(), LoginRequest.class);
+        var result = loginService.login(request);
+        ctx.result(new Gson().toJson(result));
+
+    }
+
+    private void logout(Context ctx) throws ResponseException {
+
+        String authToken = ctx.header("authorization");
+        logoutService.logout(authToken);
+        ctx.status(200);
 
     }
 
