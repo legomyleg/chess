@@ -28,6 +28,8 @@ public class SQLUserDAO implements UserDAO {
         }
     }
 
+    private void execute
+
     @Override
     public void createUser(UserData user) throws DataAccessException {
         var statement = "INSERT INTO users(username, password, email) VALUES (?, ?, ?)";
