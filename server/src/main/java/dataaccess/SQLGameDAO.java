@@ -38,6 +38,11 @@ public class SQLGameDAO implements GameDAO {
 
     @Override
     public void deleteAll() {
-
+        var statement = "TRUNCATE TABLE games";
+        try {
+            DBHelper.updateHelper(statement);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

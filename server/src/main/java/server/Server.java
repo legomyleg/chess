@@ -29,6 +29,7 @@ public class Server {
     private final CreateGameService createGameService;
     private final JoinGameService joinGameService;
 
+    // TODO: Make these SQL DAOs
     public Server() {
         var authDAO = new MemoryAuthDAO();
         var gameDAO = new MemoryGameDAO();
