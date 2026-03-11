@@ -20,6 +20,12 @@ public class SQLAuthDAO implements AuthDAO {
 
     @Override
     public void deleteAll() {
+        var statement = "TRUNCATE TABLE auth";
 
+        try {
+            DBHelper.updateHelper(statement);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

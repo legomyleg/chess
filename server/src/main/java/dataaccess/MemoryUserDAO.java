@@ -30,6 +30,11 @@ public class MemoryUserDAO implements UserDAO {
         return users.get(username);
     }
 
+    // TODO: Implement memory password verification.
+    @Override
+    public boolean verifyPassword(String username, String password) {
+        return false;
+    }
 
 
     @Override

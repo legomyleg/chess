@@ -55,7 +55,19 @@ public class SQLUserDAO implements UserDAO {
 
     @Override
     public boolean verifyPassword(String username, String plainTextPassword) {
+        try {
+            var hashedPassword = DBHelper.getStringHelper(
+                    "users",
+                    "password",
+                    "username",
+                    username
+            );
 
+            return BCrypt.checkpw(plainTextPassword, hashedPassword);
+        }
+        catch (DataAccessException ex) {
+            return false;
+        }
     }
 
     @Override

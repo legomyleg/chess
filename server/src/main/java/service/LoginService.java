@@ -21,6 +21,7 @@ public class LoginService {
         this.authDAO = authDAO;
     }
 
+    // TODO: Remove all password verification here, normalize to simply "Username or password incorrect"
     public LoginResult login(LoginRequest request) throws ResponseException {
 
         String username = request.username();
