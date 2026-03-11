@@ -28,18 +28,34 @@ public class SQLUserDAO implements UserDAO {
         }
     }
 
-    private void execute
-
     @Override
     public void createUser(UserData user) throws DataAccessException {
         var statement = "INSERT INTO users(username, password, email) VALUES (?, ?, ?)";
         var hashedPassword = hashPassword(user.password());
-        executeUpdate(statement, user.username(), hashedPassword, user.email());
+        DBHelper.updateHelper(statement, user.username(), hashedPassword, user.email());
     }
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        return null;
+        var hashedPassword = DBHelper.getStringHelper(
+                "users",
+                "password",
+                "username",
+                username);
+
+        var email = DBHelper.getStringHelper(
+                "users",
+                "email",
+                "username",
+                username
+        );
+
+        return new UserData(username, hashedPassword, email);
+    }
+
+    @Override
+    public boolean verifyPassword(String username, String plainTextPassword) {
+
     }
 
     @Override
