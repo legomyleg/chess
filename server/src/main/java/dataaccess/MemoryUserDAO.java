@@ -30,6 +30,8 @@ public class MemoryUserDAO implements UserDAO {
         return users.get(username);
     }
 
+
+
     @Override
     public void deleteAll() {
         users.clear();

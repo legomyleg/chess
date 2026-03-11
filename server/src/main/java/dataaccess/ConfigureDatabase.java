@@ -12,15 +12,17 @@ public class ConfigureDatabase {
             password VARCHAR(255) NOT NULL,
             email VARCHAR(255),
             PRIMARY KEY (username)
-            );
-            
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS auth(
-            authToken TEXT NOT NULL,
+            authToken VARCHAR(255) NOT NULL,
             username VARCHAR(255) NOT NULL,
             PRIMARY KEY (authToken),
             FOREIGN KEY (username) REFERENCES users(username)
-            );
-            
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS games(
             gameID int AUTO_INCREMENT NOT NULL,
             whiteUsername VARCHAR(255),
@@ -30,7 +32,7 @@ public class ConfigureDatabase {
             PRIMARY KEY (gameID),
             FOREIGN KEY (whiteUsername) REFERENCES users(username),
             FOREIGN KEY (blackUsername) REFERENCES users(username)
-            );
+            )
             """
     };
 
