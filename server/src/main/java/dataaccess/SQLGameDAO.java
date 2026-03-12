@@ -11,9 +11,14 @@ import java.util.Collection;
 import java.util.List;
 
 public class SQLGameDAO implements GameDAO {
+
+    public SQLGameDAO() throws DataAccessException {
+        ConfigureDatabase.configureDatabase();
+    }
+
     @Override
     public Integer createGame(String gameName) throws DataAccessException {
-        return 0;
+
     }
 
     @Override
