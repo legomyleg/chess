@@ -13,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SQLUserDAOTest {
     private Connection cn;
-    private SQLUserDAO dao;
+    private SQLUserDAO userDAO;
 
     @BeforeEach
     void setUp() {
         try {
-            dao = new SQLUserDAO();
-            dao.deleteAll();
+            userDAO = new SQLUserDAO();
+            userDAO.deleteAll();
             cn = DatabaseManager.getConnection();
         } catch (DataAccessException e) {
             throw new RuntimeException("Connection failed on setUp.", e);
@@ -29,7 +29,7 @@ class SQLUserDAOTest {
     @AfterEach
     void tearDown() {
         try {
-            dao.deleteAll();
+            userDAO.deleteAll();
             cn.close();
         } catch (SQLException e) {
             throw new RuntimeException("Connection was either already closed or experienced some other error on tearDown.", e);
@@ -40,7 +40,7 @@ class SQLUserDAOTest {
     void createUserPositive() throws DataAccessException, SQLException {
         var user = createUserData("create-user");
 
-        dao.createUser(user);
+        userDAO.createUser(user);
 
         var storedUser = fetchStoredUser(user.username());
         assertNotNull(storedUser);
@@ -52,16 +52,16 @@ class SQLUserDAOTest {
     @Test
     void createUserNegativeDuplicateUsername() throws DataAccessException {
         var user = createUserData("duplicate-user");
-        dao.createUser(user);
+        userDAO.createUser(user);
 
-        assertThrows(DataAccessException.class, () -> dao.createUser(user));
+        assertThrows(DataAccessException.class, () -> userDAO.createUser(user));
     }
 
     @Test
     void getUserPositive() throws DataAccessException {
         var user = createAndInsertUser("get-user");
 
-        var storedUser = dao.getUser(user.username());
+        var storedUser = userDAO.getUser(user.username());
 
         assertNotNull(storedUser);
         assertEquals(user.username(), storedUser.username());
@@ -71,21 +71,21 @@ class SQLUserDAOTest {
 
     @Test
     void getUserNegativeMissingUser() throws DataAccessException {
-        assertNull(dao.getUser("missing-user"));
+        assertNull(userDAO.getUser("missing-user"));
     }
 
     @Test
     void verifyPasswordPositive() throws DataAccessException {
         var user = createAndInsertUser("verify-password");
 
-        assertTrue(dao.verifyPassword(user.username(), user.password()));
+        assertTrue(userDAO.verifyPassword(user.username(), user.password()));
     }
 
     @Test
     void verifyPasswordNegativeWrongPassword() throws DataAccessException {
         var user = createAndInsertUser("verify-password-negative");
 
-        assertFalse(dao.verifyPassword(user.username(), "wrong-password"));
+        assertFalse(userDAO.verifyPassword(user.username(), "wrong-password"));
     }
 
     @Test
@@ -95,14 +95,14 @@ class SQLUserDAOTest {
         assertNotNull(fetchStoredUser(firstUser.username()));
         assertNotNull(fetchStoredUser(secondUser.username()));
 
-        dao.deleteAll();
+        userDAO.deleteAll();
 
         assertEquals(0, countUsers());
     }
 
     private UserData createAndInsertUser(String usernamePrefix) throws DataAccessException {
         var user = createUserData(usernamePrefix);
-        dao.createUser(user);
+        userDAO.createUser(user);
         return user;
     }
 

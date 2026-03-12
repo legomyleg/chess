@@ -2,43 +2,20 @@ package dataaccess;
 
 import chess.ChessGame;
 import model.GameData;
-import model.UserData;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SQLGameDAOTest {
-    private Connection cn;
+class SQLGameDAOTest extends SQLDAOTestHelper {
     private SQLGameDAO gameDAO;
-    private SQLUserDAO userDAO;
 
-    @BeforeEach
-    void setUp() {
-        try {
-            gameDAO = new SQLGameDAO();
-            userDAO = new SQLUserDAO();
-            userDAO.deleteAll();
-            cn = DatabaseManager.getConnection();
-        } catch (DataAccessException e) {
-            throw new RuntimeException("Connection failed on setUp.", e);
-        }
-    }
-
-    @AfterEach
-    void tearDown() {
-        try {
-            userDAO.deleteAll();
-            cn.close();
-        } catch (SQLException e) {
-            throw new RuntimeException("Connection was either already closed or experienced some other error on tearDown.", e);
-        }
+    @Override
+    protected void initializeDAO() {
+        gameDAO = new SQLGameDAO();
     }
 
     @Test
@@ -163,12 +140,6 @@ class SQLGameDAOTest {
         gameDAO.deleteAll();
 
         assertEquals(0, countGames());
-    }
-
-    private UserData createAndInsertUser(String usernamePrefix) throws DataAccessException {
-        var user = new UserData(usernamePrefix, "password123", usernamePrefix + "@gmail.com");
-        userDAO.createUser(user);
-        return user;
     }
 
     private GameData fetchStoredGame(int gameID) throws SQLException {

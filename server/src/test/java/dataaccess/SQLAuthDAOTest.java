@@ -1,42 +1,19 @@
 package dataaccess;
 
 import model.AuthData;
-import model.UserData;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SQLAuthDAOTest {
-    private Connection cn;
+class SQLAuthDAOTest extends SQLDAOTestHelper {
     private SQLAuthDAO authDAO;
-    private SQLUserDAO userDAO;
 
-    @BeforeEach
-    void setUp() {
-        try {
-            authDAO = new SQLAuthDAO();
-            userDAO = new SQLUserDAO();
-            userDAO.deleteAll();
-            cn = DatabaseManager.getConnection();
-        } catch (DataAccessException e) {
-            throw new RuntimeException("Connection failed on setUp.", e);
-        }
-    }
-
-    @AfterEach
-    void tearDown() {
-        try {
-            userDAO.deleteAll();
-            cn.close();
-        } catch (SQLException e) {
-            throw new RuntimeException("Connection was either already closed or experienced some other error on tearDown.", e);
-        }
+    @Override
+    protected void initializeDAO() {
+        authDAO = new SQLAuthDAO();
     }
 
     @Test
@@ -101,12 +78,6 @@ class SQLAuthDAOTest {
         authDAO.deleteAll();
 
         assertEquals(0, countAuths());
-    }
-
-    private UserData createAndInsertUser(String usernamePrefix) throws DataAccessException {
-        var user = new UserData(usernamePrefix, "password123", usernamePrefix + "@gmail.com");
-        userDAO.createUser(user);
-        return user;
     }
 
     private AuthData createAndInsertAuth(String usernamePrefix) throws DataAccessException {
