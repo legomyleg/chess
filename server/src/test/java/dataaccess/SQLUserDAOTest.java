@@ -59,4 +59,5 @@ class SQLUserDAOTest {
             throw new AssertionError("Database access should not throw SQLException.");
         }
     }
+
 }

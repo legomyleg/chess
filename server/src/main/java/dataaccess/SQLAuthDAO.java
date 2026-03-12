@@ -3,6 +3,8 @@ package dataaccess;
 import model.AuthData;
 
 public class SQLAuthDAO implements AuthDAO {
+
+
     @Override
     public AuthData createAuth(String username) throws DataAccessException {
         String token = MemoryAuthDAO.generateToken();
