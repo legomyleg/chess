@@ -66,7 +66,6 @@ class DBHelperTest {
         }
     }
 
-    // TODO: Finish adding positive and negative tests
     @Test
     void updateHelperSuccess() {
         var statement = "INSERT INTO test_table(first_name, last_name) VALUES (?, ?)";

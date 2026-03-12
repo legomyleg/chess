@@ -13,7 +13,9 @@ public class DBHelper {
                 ps.executeUpdate();
 
                 ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
 
                 return 0;
 
@@ -60,10 +62,15 @@ public class DBHelper {
     static private void setUpStatement(PreparedStatement ps, Object[] params) throws SQLException {
         for (int i = 0; i < params.length; i++) {
             Object param = params[i];
-            if (param instanceof String p) ps.setString(i + 1, p);
-            else if (param instanceof Integer p) ps.setInt(i + 1, p);
-            else
+            if (param instanceof String p) {
+                ps.setString(i + 1, p);
+            }
+            else if (param instanceof Integer p) {
+                ps.setInt(i + 1, p);
+            }
+            else {
                 throw new RuntimeException(String.format("Object type %s not currently supported.", param.getClass().getName()));
+            }
         }
     }
 }
