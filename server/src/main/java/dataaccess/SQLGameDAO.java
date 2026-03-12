@@ -71,13 +71,13 @@ public class SQLGameDAO implements GameDAO {
 
     @Override
     public void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException {
-        var statement = "UPDATE games SET white_username='%s' WHERE id=%d".formatted(whiteUsername, gameID);
+        var statement = "UPDATE games SET white_username='%s' WHERE game_id=%d".formatted(whiteUsername, gameID);
         DBHelper.updateHelper(statement);
     }
 
     @Override
     public void updateBlackPlayer(Integer gameID, String blackUsername) throws DataAccessException {
-        var statement = "UPDATE games SET black_username='%s' WHERE id=%d".formatted(blackUsername, gameID);
+        var statement = "UPDATE games SET black_username='%s' WHERE game_id=%d".formatted(blackUsername, gameID);
         DBHelper.updateHelper(statement);
     }
 
@@ -123,7 +123,7 @@ public class SQLGameDAO implements GameDAO {
             String gameName = rs.getString("game_name");
             String gameJson = rs.getString("game");
             ChessGame game = createSerializer().fromJson(gameJson, ChessGame.class);
-            Integer gameID = rs.getInt("gameID");
+            Integer gameID = rs.getInt("game_id");
             String whiteUsername = rs.getString("white_username");
             String blackUsername = rs.getString("black_username");
 

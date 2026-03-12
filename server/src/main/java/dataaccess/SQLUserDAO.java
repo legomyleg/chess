@@ -82,10 +82,13 @@ public class SQLUserDAO implements UserDAO {
         var truncateUsers = "TRUNCATE TABLE users";
         var enableForeignKeys = "SET FOREIGN_KEY_CHECKS = 1";
 
-        try {
-            DBHelper.updateHelper(disableForeignKeys);
-            DBHelper.updateHelper(truncateUsers);
-            DBHelper.updateHelper(enableForeignKeys);
+        try (Connection conn = DatabaseManager.getConnection()) {
+            var ps = conn.prepareStatement(disableForeignKeys);
+            ps.executeUpdate();
+            ps = conn.prepareStatement(truncateUsers);
+            ps.executeUpdate();
+            ps = conn.prepareStatement(enableForeignKeys);
+            ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

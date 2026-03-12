@@ -29,9 +29,9 @@ public class ConfigureDatabase {
             black_username VARCHAR(255),
             game_name VARCHAR(255) NOT NULL,
             game TEXT,
-            PRIMARY KEY (gameID),
-            FOREIGN KEY (whiteUsername) REFERENCES users(username),
-            FOREIGN KEY (blackUsername) REFERENCES users(username)
+            PRIMARY KEY (game_id),
+            FOREIGN KEY (white_username) REFERENCES users(username),
+            FOREIGN KEY (black_username) REFERENCES users(username)
             )
             """
     };

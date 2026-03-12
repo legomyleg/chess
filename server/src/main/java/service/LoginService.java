@@ -31,15 +31,8 @@ public class LoginService {
             throw new BadRequestException("Error: Bad request");
         }
 
-        UserData userData = null;
-        try {
-            userData = userDAO.getUser(username);
-        } catch (DataAccessException e) {
-            throw new IncorrectUsernameException("Error: username incorrect");
-        }
-
-        if (!userData.password().equals(password)) {
-            throw new IncorrectPasswordException("Error: incorrect password");
+        if (!userDAO.verifyPassword(username, password)) {
+            throw new IncorrectUsernameException("Incorrect username or password");
         }
 
         AuthData authData = null;
