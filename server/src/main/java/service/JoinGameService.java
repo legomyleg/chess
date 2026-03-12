@@ -6,7 +6,7 @@ import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import exception.AlreadyTakenException;
 import exception.BadRequestException;
-import exception.GameNotFoundException;
+import exception.DatabaseErrorException;
 import exception.NotAuthenticatedException;
 import exception.ResponseException;
 import model.AuthData;
@@ -25,41 +25,39 @@ public class JoinGameService {
     public void joinGame(JoinGameRequest request, String authToken) throws ResponseException {
 
         if (request.playerColor() == null) {
-            throw new BadRequestException("Error: Bad request");
+            throw new BadRequestException();
         }
-
-        AuthData authData = null;
-        try {
-            authData = authDAO.getAuthByToken(authToken);
-        } catch (DataAccessException e) {
-            throw new NotAuthenticatedException("Error: user not authenticated");
-        }
-
-        String username = authData.username();
-        ChessGame.TeamColor playerColor = request.playerColor();
-        Integer gameID = request.gameID();
-
-        GameData gameData = null;
-        try {
-            gameData = gameDAO.getGameByGameID(gameID);
-        } catch (DataAccessException e) {
-            throw new GameNotFoundException("Error: game not found");
-        }
-
-        String neededSpot = (playerColor == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
-        if (neededSpot != null) {
-            throw new AlreadyTakenException("Error: color not available");
+        if (authToken == null) {
+            throw new NotAuthenticatedException();
         }
 
         try {
+            AuthData authData = authDAO.getAuthByToken(authToken);
+            if (authData == null) {
+                throw new NotAuthenticatedException();
+            }
+
+            String username = authData.username();
+            ChessGame.TeamColor playerColor = request.playerColor();
+            Integer gameID = request.gameID();
+
+            GameData gameData = gameDAO.getGameByGameID(gameID);
+            if (gameData == null) {
+                throw new BadRequestException();
+            }
+
+            String neededSpot = (playerColor == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
+            if (neededSpot != null) {
+                throw new AlreadyTakenException();
+            }
+
             if (playerColor == ChessGame.TeamColor.WHITE) {
                 gameDAO.updateWhitePlayer(gameID, username);
             } else {
                 gameDAO.updateBlackPlayer(gameID, username);
             }
         } catch (DataAccessException e) {
-            throw new ResponseException(500, "Error: could not add player");
+            throw new DatabaseErrorException("could not join game");
         }
-
     }
 }

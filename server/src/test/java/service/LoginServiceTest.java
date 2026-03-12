@@ -4,7 +4,7 @@ import dataaccess.AuthDAO;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryUserDAO;
 import dataaccess.UserDAO;
-import exception.IncorrectPasswordException;
+import exception.NotAuthenticatedException;
 import exception.ResponseException;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,7 +52,7 @@ class LoginServiceTest {
         String wrongPassword = "wrong";
         var badRequest = new LoginRequest(username, wrongPassword);
 
-        assertThrowsExactly(IncorrectPasswordException.class, () -> loginService.login(badRequest));
+        assertThrowsExactly(NotAuthenticatedException.class, () -> loginService.login(badRequest));
 
     }
 }

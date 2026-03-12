@@ -29,9 +29,11 @@ public class DBHelper {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement)) {
                 setUpStatement(ps, new Object[] {key});
-                ResultSet rs = executeQuery(ps);
-
-                return rs.getString(columnLabel);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    return rs.getString(columnLabel);
+                }
+                return null;
             }
         }
         catch (SQLException ex) {
@@ -44,9 +46,11 @@ public class DBHelper {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement)) {
                 setUpStatement(ps, new Object[] {key});
-                ResultSet rs = executeQuery(ps);
-
-                return rs.getInt(columnLabel);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt(columnLabel);
+                }
+                return null;
             }
         } catch (SQLException e) {
             throw new DataAccessException(e.getMessage());
@@ -61,13 +65,5 @@ public class DBHelper {
             else
                 throw new RuntimeException(String.format("Object type %s not currently supported.", param.getClass().getName()));
         }
-    }
-
-    static private ResultSet executeQuery(PreparedStatement ps) throws SQLException {
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs;
-        }
-        throw new SQLException("Statement '%s' returned null.".formatted(ps.toString()));
     }
 }

@@ -2,6 +2,7 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.*;
+import exception.DatabaseErrorException;
 import exception.ResponseException;
 import io.javalin.*;
 import io.javalin.http.Context;
@@ -48,7 +49,8 @@ public class Server {
                 .post("/game", this::createGame)
                 .put("/game", this::joinGame)
                 .delete("/db", this::deleteAllData)
-                .exception(ResponseException.class, this::exceptionHandler);
+                .exception(ResponseException.class, this::exceptionHandler)
+                .exception(RuntimeException.class, this::runtimeExceptionHandler);
 
     }
 
@@ -64,6 +66,12 @@ public class Server {
     private void exceptionHandler(ResponseException ex, Context ctx) {
         ctx.status(ex.getHttpStatusCode());
         ctx.result(ex.toJson());
+    }
+
+    private void runtimeExceptionHandler(RuntimeException ex, Context ctx) {
+        var error = new DatabaseErrorException(ex.getMessage());
+        ctx.status(error.getHttpStatusCode());
+        ctx.result(error.toJson());
     }
 
     private void register(Context ctx) throws ResponseException {

@@ -30,6 +30,9 @@ public class SQLAuthDAO implements AuthDAO {
                 authToken
         );
 
+        if (username == null) {
+            return null;
+        }
         return new AuthData(authToken, username);
     }
 

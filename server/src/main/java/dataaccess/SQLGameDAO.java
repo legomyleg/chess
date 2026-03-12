@@ -37,6 +37,9 @@ public class SQLGameDAO implements GameDAO {
     @Override
     public GameData getGameByGameName(String gameName) throws DataAccessException {
         Integer gameID = DBHelper.getIntHelper("games", "game_id", "game_name", gameName);
+        if (gameID == null) {
+            return null;
+        }
         String gameJson = DBHelper.getStringHelper("games", "game", "game_name", gameName);
         ChessGame game = createSerializer().fromJson(gameJson, ChessGame.class);
         String whiteUsername = DBHelper.getStringHelper("games", "white_username", "game_name", gameName);
@@ -50,6 +53,9 @@ public class SQLGameDAO implements GameDAO {
     @Override
     public GameData getGameByGameID(Integer gameID) throws DataAccessException {
         String gameName = DBHelper.getStringHelper("games", "game_name", "game_id", gameID);
+        if (gameName == null) {
+            return null;
+        }
         String gameJson = DBHelper.getStringHelper("games", "game", "game_id", gameID);
         ChessGame game = createSerializer().fromJson(gameJson, ChessGame.class);
         String whiteUsername = DBHelper.getStringHelper("games", "white_username", "game_id", gameID);

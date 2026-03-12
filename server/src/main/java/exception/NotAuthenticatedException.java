@@ -1,7 +1,13 @@
 package exception;
 
 public class NotAuthenticatedException extends ResponseException {
-    public NotAuthenticatedException(String message) {
-        super(401, message);
+    private static final String MESSAGE = "Error: unauthorized";
+
+    public NotAuthenticatedException() {
+        super(401, MESSAGE);
+    }
+
+    public NotAuthenticatedException(String ignored) {
+        this();
     }
 }

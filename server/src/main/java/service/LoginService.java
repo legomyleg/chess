@@ -4,11 +4,10 @@ import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
 import exception.BadRequestException;
-import exception.IncorrectPasswordException;
-import exception.IncorrectUsernameException;
+import exception.DatabaseErrorException;
+import exception.NotAuthenticatedException;
 import exception.ResponseException;
 import model.AuthData;
-import model.UserData;
 import request.LoginRequest;
 import result.LoginResult;
 
@@ -28,20 +27,22 @@ public class LoginService {
         String password = request.password();
 
         if (username == null || password == null) {
-            throw new BadRequestException("Error: Bad request");
+            throw new BadRequestException();
         }
 
-        if (!userDAO.verifyPassword(username, password)) {
-            throw new IncorrectUsernameException("Incorrect username or password");
-        }
-
-        AuthData authData = null;
         try {
-            authData = authDAO.createAuth(username);
+            if (!userDAO.verifyPassword(username, password)) {
+                throw new NotAuthenticatedException();
+            }
         } catch (DataAccessException e) {
-            throw new ResponseException(500, "Error: could not create session");
+            throw new DatabaseErrorException("could not verify user");
         }
 
-        return new LoginResult(username, authData.authToken());
+        try {
+            AuthData authData = authDAO.createAuth(username);
+            return new LoginResult(username, authData.authToken());
+        } catch (DataAccessException e) {
+            throw new DatabaseErrorException("could not create session");
+        }
     }
 }

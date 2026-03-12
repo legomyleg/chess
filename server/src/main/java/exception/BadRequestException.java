@@ -1,7 +1,13 @@
 package exception;
 
 public class BadRequestException extends ResponseException {
-    public BadRequestException(String message) {
-        super(400, message);
+    private static final String MESSAGE = "Error: bad request";
+
+    public BadRequestException() {
+        super(400, MESSAGE);
+    }
+
+    public BadRequestException(String ignored) {
+        this();
     }
 }

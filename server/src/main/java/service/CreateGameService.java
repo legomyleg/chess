@@ -4,7 +4,7 @@ import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import exception.BadRequestException;
-import exception.GameAlreadyExistsException;
+import exception.DatabaseErrorException;
 import exception.NotAuthenticatedException;
 import exception.ResponseException;
 import request.CreateGameRequest;
@@ -22,20 +22,25 @@ public class CreateGameService {
     public CreateGameResult createGame(CreateGameRequest request, String authToken) throws ResponseException {
 
         if (request.gameName() == null) {
-            throw new BadRequestException("Error: Bad request");
+            throw new BadRequestException();
+        }
+        if (authToken == null) {
+            throw new NotAuthenticatedException();
         }
 
         try {
-            authDAO.getAuthByToken(authToken);
+            if (authDAO.getAuthByToken(authToken) == null) {
+                throw new NotAuthenticatedException();
+            }
         } catch (DataAccessException e) {
-            throw new NotAuthenticatedException("Error: user not authenticated");
+            throw new DatabaseErrorException("could not verify auth");
         }
 
         try {
             Integer gameID = gameDAO.createGame(request.gameName());
             return new CreateGameResult(gameID);
         } catch (DataAccessException e) {
-            throw new GameAlreadyExistsException("Error: game already exists");
+            throw new DatabaseErrorException("could not create game");
         }
     }
 }

@@ -3,6 +3,7 @@ package service;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
+import exception.DatabaseErrorException;
 import exception.NotAuthenticatedException;
 import exception.ResponseException;
 import result.GameListResult;
@@ -17,13 +18,22 @@ public class ListGamesService {
     }
 
     public GameListResult listGames(String authToken) throws ResponseException {
-
-        try {
-            authDAO.getAuthByToken(authToken);
-        } catch (DataAccessException e) {
-            throw new NotAuthenticatedException("Error: user not authenticated");
+        if (authToken == null) {
+            throw new NotAuthenticatedException();
         }
 
-        return new GameListResult(gameDAO.listAllGames());
+        try {
+            if (authDAO.getAuthByToken(authToken) == null) {
+                throw new NotAuthenticatedException();
+            }
+        } catch (DataAccessException e) {
+            throw new DatabaseErrorException("could not verify auth");
+        }
+
+        try {
+            return new GameListResult(gameDAO.listAllGames());
+        } catch (RuntimeException e) {
+            throw new DatabaseErrorException("could not list games");
+        }
     }
 }

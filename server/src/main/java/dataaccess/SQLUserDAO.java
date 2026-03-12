@@ -47,6 +47,9 @@ public class SQLUserDAO implements UserDAO {
                 "username",
                 username);
 
+        if (hashedPassword == null) {
+            return null;
+        }
         var email = DBHelper.getStringHelper(
                 "users",
                 "email",
@@ -58,20 +61,18 @@ public class SQLUserDAO implements UserDAO {
     }
 
     @Override
-    public boolean verifyPassword(String username, String plainTextPassword) {
-        try {
-            var hashedPassword = DBHelper.getStringHelper(
-                    "users",
-                    "password",
-                    "username",
-                    username
-            );
+    public boolean verifyPassword(String username, String plainTextPassword) throws DataAccessException {
+        var hashedPassword = DBHelper.getStringHelper(
+                "users",
+                "password",
+                "username",
+                username
+        );
 
-            return BCrypt.checkpw(plainTextPassword, hashedPassword);
-        }
-        catch (DataAccessException ex) {
+        if (hashedPassword == null) {
             return false;
         }
+        return BCrypt.checkpw(plainTextPassword, hashedPassword);
     }
 
     @Override

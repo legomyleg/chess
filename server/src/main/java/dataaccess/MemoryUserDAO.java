@@ -1,6 +1,5 @@
 package dataaccess;
 
-import exception.UserDoesNotExistException;
 import model.UserData;
 
 import java.util.HashMap;
@@ -24,16 +23,13 @@ public class MemoryUserDAO implements UserDAO {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        if (users.get(username) == null) {
-            throw new DataAccessException("User does not exist.");
-        }
         return users.get(username);
     }
 
-    // TODO: Implement memory password verification.
     @Override
-    public boolean verifyPassword(String username, String password) {
-        return false;
+    public boolean verifyPassword(String username, String password) throws DataAccessException {
+        var user = getUser(username);
+        return user != null && user.password().equals(password);
     }
 
 
