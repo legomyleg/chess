@@ -9,8 +9,12 @@ import java.sql.SQLException;
 
 public class SQLUserDAO implements UserDAO {
 
-    public SQLUserDAO() throws DataAccessException {
-        ConfigureDatabase.configureDatabase();
+    public SQLUserDAO() {
+        try {
+            ConfigureDatabase.configureDatabase();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void executeUpdate(String statement, String... params) throws DataAccessException {
@@ -72,12 +76,8 @@ public class SQLUserDAO implements UserDAO {
 
     @Override
     public void deleteAll() {
-        try {
-            new SQLAuthDAO().deleteAll();
-            new SQLGameDAO().deleteAll();
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        new SQLAuthDAO().deleteAll();
+        new SQLGameDAO().deleteAll();
         var disableForeignKeys = "SET FOREIGN_KEY_CHECKS = 0";
         var truncateUsers = "TRUNCATE TABLE users";
         var enableForeignKeys = "SET FOREIGN_KEY_CHECKS = 1";

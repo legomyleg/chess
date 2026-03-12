@@ -4,8 +4,12 @@ import model.AuthData;
 
 public class SQLAuthDAO implements AuthDAO {
 
-    public SQLAuthDAO() throws DataAccessException {
-        ConfigureDatabase.configureDatabase();
+    public SQLAuthDAO() {
+        try {
+            ConfigureDatabase.configureDatabase();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

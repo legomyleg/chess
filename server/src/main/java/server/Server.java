@@ -1,9 +1,7 @@
 package server;
 
 import com.google.gson.Gson;
-import dataaccess.MemoryAuthDAO;
-import dataaccess.MemoryGameDAO;
-import dataaccess.MemoryUserDAO;
+import dataaccess.*;
 import exception.ResponseException;
 import io.javalin.*;
 import io.javalin.http.Context;
@@ -31,9 +29,9 @@ public class Server {
 
     // TODO: Make these SQL DAOs
     public Server() {
-        var authDAO = new MemoryAuthDAO();
-        var gameDAO = new MemoryGameDAO();
-        var userDAO = new MemoryUserDAO();
+        var authDAO = new SQLAuthDAO();
+        var gameDAO = new SQLGameDAO();
+        var userDAO = new SQLUserDAO();
         registerService = new RegisterService(authDAO, userDAO);
         clearService = new ClearService(gameDAO, authDAO, userDAO);
         loginService = new LoginService(userDAO, authDAO);

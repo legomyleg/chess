@@ -24,10 +24,10 @@ public class ConfigureDatabase {
             """,
             """
             CREATE TABLE IF NOT EXISTS games(
-            gameID int AUTO_INCREMENT NOT NULL,
-            whiteUsername VARCHAR(255),
-            blackUsername VARCHAR(255),
-            gameName VARCHAR(255) NOT NULL,
+            game_id int AUTO_INCREMENT NOT NULL,
+            white_username VARCHAR(255),
+            black_username VARCHAR(255),
+            game_name VARCHAR(255) NOT NULL,
             game TEXT,
             PRIMARY KEY (gameID),
             FOREIGN KEY (whiteUsername) REFERENCES users(username),

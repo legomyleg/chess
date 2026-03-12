@@ -39,6 +39,20 @@ public class DBHelper {
         }
     }
 
+    static public Integer getIntHelper(String tableName, String columnLabel, String primaryKeyName, Object key) throws DataAccessException {
+        var statement = "SELECT %s FROM %s WHERE %s=?".formatted(columnLabel, tableName, primaryKeyName);
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (var ps = conn.prepareStatement(statement)) {
+                setUpStatement(ps, new Object[] {key});
+                ResultSet rs = executeQuery(ps);
+
+                return rs.getInt(columnLabel);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(e.getMessage());
+        }
+    }
+
     static private void setUpStatement(PreparedStatement ps, Object[] params) throws SQLException {
         for (int i = 0; i < params.length; i++) {
             Object param = params[i];
