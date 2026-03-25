@@ -17,4 +17,8 @@ public class ResponseException extends Exception {
     public String toJson() {
         return new Gson().toJson(Map.of("message", getMessage()));
     }
+
+    static public ResponseException fromJson(String json) {
+        return new Gson().fromJson(json, ResponseException.class);
+    }
 }

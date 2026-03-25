@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static chess.serialization.ChessGameAdapter.createSerializer;
+
 public class SQLGameDAO implements GameDAO {
 
     public SQLGameDAO() {
@@ -95,28 +97,6 @@ public class SQLGameDAO implements GameDAO {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static Gson createSerializer() {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-
-        gsonBuilder.registerTypeAdapter(
-                ChessPiece.class,
-                (JsonDeserializer<ChessPiece>) (el, type, ctx) -> {
-                    var obj = el.getAsJsonObject();
-
-                    ChessGame.TeamColor color = ctx.deserialize(obj.get("pieceColor"), ChessGame.TeamColor.class);
-                    ChessPiece.PieceType pieceType = ctx.deserialize(obj.get("type"), ChessPiece.PieceType.class);
-                    boolean moved = obj.get("moved").getAsBoolean();
-
-                    var piece = new ChessPiece(color, pieceType);
-                    if (moved) {
-                        piece.setMoved();
-                    }
-                    return piece;
-                });
-
-        return gsonBuilder.create();
     }
 
     private Collection<GameData> listAllHelper(Connection conn) throws SQLException {

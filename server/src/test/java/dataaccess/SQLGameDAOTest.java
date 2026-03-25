@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
+import static chess.serialization.ChessGameAdapter.createSerializer;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SQLGameDAOTest extends SQLDAOTestHelper {
@@ -155,7 +156,7 @@ class SQLGameDAOTest extends SQLDAOTestHelper {
                         rs.getString("white_username"),
                         rs.getString("black_username"),
                         rs.getString("game_name"),
-                        SQLGameDAO.createSerializer().fromJson(rs.getString("game"), ChessGame.class));
+                        createSerializer().fromJson(rs.getString("game"), ChessGame.class));
             }
         }
     }
