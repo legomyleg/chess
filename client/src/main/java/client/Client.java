@@ -1,5 +1,7 @@
 package client;
 
+import static ui.EscapeSequences.*;
+
 public class Client {
     private final ServerFacade server;
 
@@ -8,7 +10,7 @@ public class Client {
     }
 
     public void run() {
-        System.out.println("Welcome to chess!");
+        System.out.println(WHITE_KING + " Welcome to CS240 Chess Online!");
 
 
     }

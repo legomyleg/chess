@@ -31,9 +31,12 @@ public class ChessPieceAdapter extends TypeAdapter<ChessPiece> {
             return null;
         }
 
+
         ChessGame.TeamColor teamColor = null;
         ChessPiece.PieceType type = null;
         boolean moved = false;
+
+        in.beginObject();
         while (in.hasNext()) {
             String name = in.nextName();
             switch (name) {
@@ -43,6 +46,7 @@ public class ChessPieceAdapter extends TypeAdapter<ChessPiece> {
                 default -> in.skipValue();
             }
         }
+        in.endObject();
 
         ChessPiece piece = new ChessPiece(teamColor, type);
         if (moved) {

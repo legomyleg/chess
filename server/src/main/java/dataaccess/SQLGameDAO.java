@@ -28,7 +28,7 @@ public class SQLGameDAO implements GameDAO {
     public Integer createGame(String gameName) throws DataAccessException {
         ChessGame game = new ChessGame();
         var statement = "INSERT INTO games(game_name, game) VALUES (?, ?)";
-        Integer id = DBHelper.updateHelper(statement, gameName, new Gson().toJson(game));
+        Integer id = DBHelper.updateHelper(statement, gameName, GsonFactory.create().toJson(game));
         return id;
     }
 
