@@ -1,12 +1,11 @@
 package client;
 
-import chess.serialization.ChessGameAdapter;
+import chess.serialization.GsonFactory;
+import client.bodytypes.CreateGameBody;
+import client.bodytypes.JoinGameBody;
 import client.bodytypes.LoginBody;
 import client.bodytypes.RegisterBody;
-import client.responses.ErrorResponse;
-import client.responses.ListGamesResponse;
-import client.responses.LoginResponse;
-import client.responses.RegisterResponse;
+import client.responses.*;
 import com.google.gson.Gson;
 import exception.ResponseException;
 
@@ -49,7 +48,20 @@ public class ServerFacade {
     public ListGamesResponse listGames(String authToken) throws ResponseException {
         var request = buildRequest("GET", "/game", null, authToken);
         var response = sendRequest(request);
-        return handleResponse(response, ListGamesResponse.class, ChessGameAdapter.createSerializer());
+        return handleResponse(response, ListGamesResponse.class);
+    }
+
+    public CreateGameResponse createGame(String gameName, String authToken) throws ResponseException {
+        var requestBody = new CreateGameBody(gameName);
+        var request = buildRequest("POST", "/game", requestBody, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, CreateGameResponse.class);
+    }
+
+    public void joinGame(String playerColor, int gameID, String authToken) throws ResponseException {
+        var requestBody = new JoinGameBody(playerColor, gameID);
+        var request = buildRequest("PUT", "/game", requestBody, authToken);
+        sendRequest(request);
     }
 
     public void clear() throws ResponseException {
@@ -100,7 +112,7 @@ public class ServerFacade {
         }
     }
 
-    private <T> T handleResponse(HttpResponse<String> response, Class<T> responseType, Gson serializer) throws ResponseException {
+    private <T> T handleResponse(HttpResponse<String> response, Class<T> responseType) throws ResponseException {
         var status = response.statusCode();
         if (isUnsuccessful(status)) {
             var body = response.body();
@@ -111,13 +123,10 @@ public class ServerFacade {
             throw new ResponseException(status, "Other failure: " + status);
         }
 
-        if (responseType == null) {
-            return null;
+        if (responseType != null) {
+            return GsonFactory.create().fromJson(response.body(), responseType);
         }
-        if (serializer == null) {
-            return new Gson().fromJson(response.body(), responseType);
-        }
-        return serializer.fromJson(response.body(), responseType);
+        return null;
     }
 
     private boolean isUnsuccessful(int status) {

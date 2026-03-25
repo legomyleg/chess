@@ -1,10 +1,8 @@
 package dataaccess;
 
 import chess.ChessGame;
-import chess.ChessPiece;
+import chess.serialization.GsonFactory;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
 import model.GameData;
 
 import java.sql.Connection;
@@ -13,8 +11,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import static chess.serialization.ChessGameAdapter.createSerializer;
 
 public class SQLGameDAO implements GameDAO {
 
@@ -43,7 +39,7 @@ public class SQLGameDAO implements GameDAO {
             return null;
         }
         String gameJson = DBHelper.getStringHelper("games", "game", "game_name", gameName);
-        ChessGame game = createSerializer().fromJson(gameJson, ChessGame.class);
+        ChessGame game = GsonFactory.create().fromJson(gameJson, ChessGame.class);
         String whiteUsername = DBHelper.getStringHelper("games", "white_username", "game_name", gameName);
         String blackUsername = DBHelper.getStringHelper("games", "black_username", "game_name", gameName);
 
@@ -59,7 +55,7 @@ public class SQLGameDAO implements GameDAO {
             return null;
         }
         String gameJson = DBHelper.getStringHelper("games", "game", "game_id", gameID);
-        ChessGame game = createSerializer().fromJson(gameJson, ChessGame.class);
+        ChessGame game = GsonFactory.create().fromJson(gameJson, ChessGame.class);
         String whiteUsername = DBHelper.getStringHelper("games", "white_username", "game_id", gameID);
         String blackUsername = DBHelper.getStringHelper("games", "black_username", "game_id", gameID);
 
@@ -108,7 +104,7 @@ public class SQLGameDAO implements GameDAO {
         while (rs.next()) {
             String gameName = rs.getString("game_name");
             String gameJson = rs.getString("game");
-            ChessGame game = createSerializer().fromJson(gameJson, ChessGame.class);
+            ChessGame game = GsonFactory.create().fromJson(gameJson, ChessGame.class);
             Integer gameID = rs.getInt("game_id");
             String whiteUsername = rs.getString("white_username");
             String blackUsername = rs.getString("black_username");

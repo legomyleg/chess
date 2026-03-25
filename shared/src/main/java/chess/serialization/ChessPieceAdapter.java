@@ -1,5 +1,6 @@
 package chess.serialization;
 
+import chess.ChessGame;
 import chess.ChessPiece;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
@@ -29,5 +30,25 @@ public class ChessPieceAdapter extends TypeAdapter<ChessPiece> {
             in.nextNull();
             return null;
         }
+
+        ChessGame.TeamColor teamColor = null;
+        ChessPiece.PieceType type = null;
+        boolean moved = false;
+        while (in.hasNext()) {
+            String name = in.nextName();
+            switch (name) {
+                case "pieceColor" -> teamColor = ChessGame.TeamColor.valueOf(in.nextString());
+                case "type" -> type = ChessPiece.PieceType.valueOf(in.nextString());
+                case "moved" -> moved = in.nextBoolean();
+                default -> in.skipValue();
+            }
+        }
+
+        ChessPiece piece = new ChessPiece(teamColor, type);
+        if (moved) {
+            piece.setMoved();
+        }
+
+        return piece;
     }
 }
