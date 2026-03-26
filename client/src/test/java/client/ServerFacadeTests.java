@@ -29,9 +29,10 @@ public class ServerFacadeTests {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws ResponseException {
         currentTestUsername = UUID.randomUUID().toString();
         currentTestPassword = UUID.randomUUID().toString();
+        clientServer.clear();
     }
 
     @Test

@@ -14,6 +14,10 @@ public class Screens {
             + SET_TEXT_COLOR_DARK_GREY
             + " - to play!\n"
             + SET_TEXT_COLOR_GREEN
+            + "quit"
+            + SET_TEXT_COLOR_DARK_GREY
+            + " - exit the client\n"
+            + SET_TEXT_COLOR_GREEN
             + "help"
             + SET_TEXT_COLOR_DARK_GREY
             + " - view commands\n";

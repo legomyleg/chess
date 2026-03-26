@@ -75,7 +75,7 @@ public class Client {
         switch (state) {
             case SIGNED_OUT -> handleSignedOut(command, parts);
             case LOBBY -> handleLobby(command, parts);
-            case IN_GAME -> {}
+            case IN_GAME -> handleInGame(command, parts);
         }
 
     }
