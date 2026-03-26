@@ -80,7 +80,14 @@ public class Client {
 
     }
 
-    private void handleInGame(String command, String[] parts)
+    private void handleInGame(String command, String[] parts) {
+        switch (command) {
+            case "help" -> print("In game help menu not set up yet. Type \"exit\" to exit game.");
+            case "exit" -> { clearScreen(); print("Leaving game."); currentState = LOBBY; }
+            case "quit" -> {}
+            default -> print("Unknown command. Type \"help\" to see commands.");
+        }
+    }
 
     private void handleLobby(String command, String[] parts) {
         switch (command) {
