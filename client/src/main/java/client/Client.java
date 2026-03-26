@@ -169,10 +169,10 @@ public class Client {
 
     private void createGame(String name) {
         try {
-            var createGameResponse = server.createGame(name, authToken);
+            server.createGame(name, authToken);
             print("Game created! Type \"list\" to see all games.");
         } catch (ResponseException e) {
-            print(e.getMessage());
+            printResponseError("create the game", e);
         }
     }
 
@@ -183,7 +183,7 @@ public class Client {
             print(SET_TEXT_COLOR_BLUE + "JOINED!");
             drawBoard(lastListedGames.get(ID - 1).game(), color);
         } catch (ResponseException e) {
-            print(e.getMessage());
+            printResponseError("join the game", e);
         }
     }
 
@@ -205,7 +205,7 @@ public class Client {
                 print(SET_TEXT_COLOR_DARK_GREY + SEPERATOR);
             }
         } catch (ResponseException e) {
-            print(e.getMessage());
+            printResponseError("list games", e);
         }
     }
 
@@ -242,7 +242,7 @@ public class Client {
             currentState = LOBBY;
             print("Logged in!");
         } catch (ResponseException e) {
-            print(e.getMessage());
+            printResponseError("register", e);
         }
     }
 
@@ -253,7 +253,7 @@ public class Client {
             currentState = LOBBY;
             print("Logged in!");
         } catch (ResponseException e) {
-            print(e.getMessage());
+            printResponseError("login", e);
         }
     }
 
@@ -264,7 +264,7 @@ public class Client {
             currentState = SIGNED_OUT;
             print("Logged out.");
         } catch (ResponseException e) {
-            print(SET_TEXT_COLOR_RED + "Unknown error has occured. Please try again.");
+            printResponseError("logout", e);
         }
     }
 
@@ -352,6 +352,27 @@ public class Client {
     private void clearScreen() {
         printInLine("\u001b[3J" + ERASE_SCREEN);
         System.out.flush();
+    }
+
+    private void printResponseError(String action, ResponseException e) {
+        String message;
+
+        if (action.equals("login") && e.getHttpStatusCode() == 401) {
+            message = "Username or password was incorrect.";
+        } else if (action.equals("register") && e.getHttpStatusCode() == 403) {
+            message = "That username is already taken.";
+        } else if (action.equals("join the game") && e.getHttpStatusCode() == 403) {
+            message = "That color is already taken.";
+        } else {
+            message = switch (e.getHttpStatusCode()) {
+                case 400 -> "Unable to " + action + ". Please check your input.";
+                case 401 -> "You must be logged in to " + action + ".";
+                case 403 -> "You are not allowed to " + action + ".";
+                default -> "Unable to " + action + " right now. Please try again.";
+            };
+        }
+
+        print(SET_TEXT_COLOR_RED + message);
     }
 
     private void print(String string) {
