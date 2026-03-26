@@ -65,7 +65,7 @@ public class SQLGameDAO implements GameDAO {
     }
 
     @Override
-    public Collection<GameData> listAllGames() {
+    public List<GameData> listAllGames() {
         try (Connection conn = DatabaseManager.getConnection()) {
             return listAllHelper(conn);
         } catch (Exception e) {
@@ -95,7 +95,7 @@ public class SQLGameDAO implements GameDAO {
         }
     }
 
-    private Collection<GameData> listAllHelper(Connection conn) throws SQLException {
+    private List<GameData> listAllHelper(Connection conn) throws SQLException {
         List<GameData> games = new ArrayList<>();
 
         var statement = "SELECT * FROM games";

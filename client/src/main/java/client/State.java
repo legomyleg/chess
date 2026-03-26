@@ -1,6 +1,6 @@
 package client;
 
-public enum States {
+public enum State {
     SIGNED_OUT,
     LOBBY,
     IN_GAME

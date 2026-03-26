@@ -3,6 +3,7 @@ package dataaccess;
 import model.GameData;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface GameDAO {
     Integer createGame(String gameName) throws DataAccessException;
@@ -11,7 +12,7 @@ public interface GameDAO {
 
     GameData getGameByGameID(Integer gameID) throws DataAccessException;
 
-    Collection<GameData> listAllGames();
+    List<GameData> listAllGames();
 
     void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException;
 
