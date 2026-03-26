@@ -72,7 +72,7 @@ public class Client {
         String command = parts[0].toLowerCase();
         lastCommand = command;
 
-        switch (currentState) {
+        switch (state) {
             case SIGNED_OUT -> handleSignedOut(command, parts);
             case LOBBY -> handleLobby(command, parts);
             case IN_GAME -> {}
