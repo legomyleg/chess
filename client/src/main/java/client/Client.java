@@ -107,28 +107,28 @@ public class Client {
             print(SET_TEXT_COLOR_RED + "Usage: observe <ID>");
             return;
         }
-        int gameID;
+        int ID;
         try {
-            gameID = Integer.parseInt(parts[1]);
-            if (gameID <= 0 || gameID > lastListedGames.size()) {
-                print(SET_TEXT_COLOR_RED + "Invalid GameID");
+            ID = Integer.parseInt(parts[1]);
+            if (ID <= 0 || ID > lastListedGames.size()) {
+                print(SET_TEXT_COLOR_RED + "Invalid ID");
                 return;
             }
         } catch (NumberFormatException e) {
-            print(SET_TEXT_COLOR_RED + "GameID must be a number.");
+            print(SET_TEXT_COLOR_RED + "ID must be a number.");
             return;
         }
 
-        observe(gameID);
+        observe(ID);
     }
 
-    private void observe(int gameID) {
-        drawBoard(lastListedGames.get(gameID - 1).game(), ChessGame.TeamColor.WHITE);
+    private void observe(int ID) {
+        drawBoard(lastListedGames.get(ID - 1).game(), ChessGame.TeamColor.WHITE);
     }
 
     private void handleJoin(String[] parts) {
         if (parts.length != 3) {
-            print(SET_TEXT_COLOR_RED + "Usage: join <GameID> <WHITE|BLACK>");
+            print(SET_TEXT_COLOR_RED + "Usage: join <ID> <WHITE|BLACK>");
             return;
         }
         if (lastListedGames.isEmpty()) {
@@ -136,15 +136,15 @@ public class Client {
             return;
         }
 
-        int gameID;
+        int ID;
         try {
-            gameID = Integer.parseInt(parts[1]);
-            if (gameID <= 0 || gameID > lastListedGames.size()) {
-                print(SET_TEXT_COLOR_RED + "Invalid GameID");
+            ID = Integer.parseInt(parts[1]);
+            if (ID <= 0 || ID > lastListedGames.size()) {
+                print(SET_TEXT_COLOR_RED + "Invalid ID");
                 return;
             }
         } catch (NumberFormatException e) {
-            print(SET_TEXT_COLOR_RED + "GameID must be a number.");
+            print(SET_TEXT_COLOR_RED + "ID must be a number.");
             return;
         }
 
@@ -156,7 +156,7 @@ public class Client {
             return;
         }
 
-        join(gameID, color);
+        join(ID, color);
     }
 
     private void handleCreate(String[] parts) {
@@ -170,18 +170,18 @@ public class Client {
     private void createGame(String name) {
         try {
             var createGameResponse = server.createGame(name, authToken);
-            print("Game created! Game ID: " + createGameResponse.gameID());
+            print("Game created! Type \"list\" to see all games.");
         } catch (ResponseException e) {
             print(e.getMessage());
         }
     }
 
-    private void join(int gameID, ChessGame.TeamColor color) {
+    private void join(int ID, ChessGame.TeamColor color) {
         try {
-            server.joinGame(color.toString(), lastListedGames.get(gameID - 1).gameID(), authToken);
+            server.joinGame(color.toString(), lastListedGames.get(ID - 1).gameID(), authToken);
             currentState = IN_GAME;
             print(SET_TEXT_COLOR_BLUE + "JOINED!");
-            drawBoard(lastListedGames.get(gameID - 1).game(), color);
+            drawBoard(lastListedGames.get(ID - 1).game(), color);
         } catch (ResponseException e) {
             print(e.getMessage());
         }
