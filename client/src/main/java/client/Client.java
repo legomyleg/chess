@@ -112,6 +112,7 @@ public class Client {
             gameID = Integer.parseInt(parts[1]);
             if (gameID <= 0 || gameID > lastListedGames.size()) {
                 print(SET_TEXT_COLOR_RED + "Invalid GameID");
+                return;
             }
         } catch (NumberFormatException e) {
             print(SET_TEXT_COLOR_RED + "GameID must be a number.");
@@ -132,6 +133,7 @@ public class Client {
         }
         if (lastListedGames.isEmpty()) {
             print(SET_TEXT_COLOR_RED + "Error: You either have not listed games or there are none created.");
+            return;
         }
 
         int gameID;
@@ -139,6 +141,7 @@ public class Client {
             gameID = Integer.parseInt(parts[1]);
             if (gameID <= 0 || gameID > lastListedGames.size()) {
                 print(SET_TEXT_COLOR_RED + "Invalid GameID");
+                return;
             }
         } catch (NumberFormatException e) {
             print(SET_TEXT_COLOR_RED + "GameID must be a number.");
