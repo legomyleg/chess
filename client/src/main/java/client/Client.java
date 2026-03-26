@@ -107,10 +107,10 @@ public class Client {
             print(SET_TEXT_COLOR_RED + "Usage: observe <ID>");
             return;
         }
-        int ID;
+        int id;
         try {
-            ID = Integer.parseInt(parts[1]);
-            if (ID <= 0 || ID > lastListedGames.size()) {
+            id = Integer.parseInt(parts[1]);
+            if (id <= 0 || id > lastListedGames.size()) {
                 print(SET_TEXT_COLOR_RED + "Invalid ID");
                 return;
             }
@@ -119,11 +119,11 @@ public class Client {
             return;
         }
 
-        observe(ID);
+        observe(id);
     }
 
-    private void observe(int ID) {
-        drawBoard(lastListedGames.get(ID - 1).game(), ChessGame.TeamColor.WHITE);
+    private void observe(int id) {
+        drawBoard(lastListedGames.get(id - 1).game(), ChessGame.TeamColor.WHITE);
     }
 
     private void handleJoin(String[] parts) {
@@ -136,10 +136,10 @@ public class Client {
             return;
         }
 
-        int ID;
+        int id;
         try {
-            ID = Integer.parseInt(parts[1]);
-            if (ID <= 0 || ID > lastListedGames.size()) {
+            id = Integer.parseInt(parts[1]);
+            if (id <= 0 || id > lastListedGames.size()) {
                 print(SET_TEXT_COLOR_RED + "Invalid ID");
                 return;
             }
@@ -156,7 +156,7 @@ public class Client {
             return;
         }
 
-        join(ID, color);
+        join(id, color);
     }
 
     private void handleCreate(String[] parts) {
@@ -176,12 +176,12 @@ public class Client {
         }
     }
 
-    private void join(int ID, ChessGame.TeamColor color) {
+    private void join(int id, ChessGame.TeamColor color) {
         try {
-            server.joinGame(color.toString(), lastListedGames.get(ID - 1).gameID(), authToken);
+            server.joinGame(color.toString(), lastListedGames.get(id - 1).gameID(), authToken);
             currentState = IN_GAME;
             print(SET_TEXT_COLOR_BLUE + "JOINED!");
-            drawBoard(lastListedGames.get(ID - 1).game(), color);
+            drawBoard(lastListedGames.get(id - 1).game(), color);
         } catch (ResponseException e) {
             printResponseError("join the game", e);
         }
