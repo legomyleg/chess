@@ -80,12 +80,17 @@ public class Client {
 
     }
 
+    private void handleInGame(String command, String[] parts)
+
     private void handleLobby(String command, String[] parts) {
         switch (command) {
             case "create" -> handleCreate(parts);
             case "list" -> list();
             case "join" -> handleJoin(parts);
             case "observe" -> handleObserve(parts);
+            case "help" -> printHelpScreen(LOBBY);
+            case "logout" -> logout();
+            case "quit" -> {}
             default -> print("Unknown command. Type \"help\" to see commands.");
         }
     }
@@ -239,6 +244,17 @@ public class Client {
             print("Logged in!");
         } catch (ResponseException e) {
             print(e.getMessage());
+        }
+    }
+
+    private void logout() {
+        try {
+            server.logout(authToken);
+            authToken = "";
+            currentState = SIGNED_OUT;
+            print("Logged out.");
+        } catch (ResponseException e) {
+            print(SET_TEXT_COLOR_RED + "Unknown error has occured. Please try again.");
         }
     }
 
