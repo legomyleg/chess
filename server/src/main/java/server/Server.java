@@ -48,6 +48,7 @@ public class Server {
                 .post("/game", this::createGame)
                 .put("/game", this::joinGame)
                 .delete("/db", this::deleteAllData)
+                .ws("/ws", )
                 .exception(ResponseException.class, this::exceptionHandler)
                 .exception(RuntimeException.class, this::runtimeExceptionHandler);
 
