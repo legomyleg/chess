@@ -2,6 +2,7 @@ package server.websocket;
 
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,12 +24,14 @@ public class ConnectionManager {
         connections.get(gameID).remove(session);
     }
 
-    public void broadcast(Session excludeSession, NotificationMessage notification) throws IOException {
-        String msg = notification.toString();
-        for (Session s : connections.values()) {
-            if (s.isOpen() && !s.equals(excludeSession)) {
-                s.getRemote().sendString(msg);
+    public void broadcastMessageToGame(Integer gameID, Session excludeSession, ServerMessage serverMessage) throws IOException {
+        String msg = serverMessage.toString();
+        List<Session> sessionsInGame = connections.get(gameID);
+        for (Session session : sessionsInGame) {
+            if (session.isOpen() && !session.equals(excludeSession)) {
+                session.getRemote().sendString(msg);
             }
         }
     }
+
 }
