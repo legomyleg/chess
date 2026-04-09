@@ -54,6 +54,19 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     @Override
+    public void updateGame(Integer gameID, ChessGame game) throws DataAccessException {
+        var oldGameData = getGameByGameID(gameID);
+        var newGameData = new GameData(gameID,
+                oldGameData.whiteUsername(),
+                oldGameData.blackUsername(),
+                oldGameData.gameName(),
+                game);
+
+        gameDataByGameName.put(oldGameData.gameName(), newGameData);
+        gameDataByGameID.put(gameID, newGameData);
+    }
+
+    @Override
     public void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException {
         GameData gameData = getGameByGameID(gameID);
         updateGameData(gameID, new GameData(
@@ -75,6 +88,12 @@ public class MemoryGameDAO implements GameDAO {
                 gameData.gameName(),
                 gameData.game()
         ));
+    }
+
+    public void endGame(Integer gameID) throws DataAccessException {
+        ChessGame game = getGameByGameID(gameID).game();
+        game.endGame();
+        updateGame(gameID, game);
     }
 
     @Override

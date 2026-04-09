@@ -37,7 +37,7 @@ public class WebSocketService {
         }
         try {
             if (gameDAO.getGameByGameID(gameID) == null) {
-                throw new DatabaseErrorException("Could not retrieve game.");
+                throw new BadRequestException("Invalid game ID.");
             }
         } catch (DataAccessException e) {
             throw new DatabaseErrorException("Database access encountered an error.");
@@ -72,4 +72,6 @@ public class WebSocketService {
             throw new DatabaseErrorException("Could not retrieve game data.");
         }
     }
+
+
 }

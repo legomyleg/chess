@@ -86,6 +86,20 @@ public class SQLGameDAO implements GameDAO {
     }
 
     @Override
+    public void updateGame(Integer gameID, ChessGame game) throws DataAccessException {
+        String serializedGame = GsonFactory.create().toJson(game);
+        var statement = "UPDATE games SET game='%s' WHERE game_id=%d".formatted(serializedGame, gameID);
+        DBHelper.updateHelper(statement);
+    }
+
+    @Override
+    public void endGame(Integer gameID) throws DataAccessException {
+        ChessGame game = getGameByGameID(gameID).game();
+        game.endGame();
+        updateGame(gameID, game);
+    }
+
+    @Override
     public void deleteAll() {
         var statement = "TRUNCATE TABLE games";
         try {

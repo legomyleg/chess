@@ -4,10 +4,12 @@ import chess.serialization.GsonFactory;
 import dataaccess.SQLAuthDAO;
 import dataaccess.SQLGameDAO;
 import exception.BadRequestException;
+import exception.DatabaseErrorException;
 import exception.ResponseException;
 import io.javalin.websocket.*;
 import org.jetbrains.annotations.NotNull;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
@@ -21,7 +23,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private final SQLAuthDAO authDAO;
     private final WebSocketService service;
 
-    public WebSocketHandler(SQLGameDAO gameDAO, SQLAuthDAO authDAO, WebSocketService service) {
+    public WebSocketHandler(SQLAuthDAO authDAO, SQLGameDAO gameDAO, WebSocketService service) {
         this.gameDAO = gameDAO;
         this.authDAO = authDAO;
         this.service = service;
@@ -49,11 +51,15 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void connectToGame(WsMessageContext ctx, UserGameCommand command) throws ResponseException {
+    private void connectToGame(WsMessageContext ctx, UserGameCommand command) {
         assert command.getCommandType() == UserGameCommand.CommandType.CONNECT;
 
         String authToken = command.getAuthToken();
-        String username = service.getUsername(authToken);
+        try {
+            String username = service.getUsername(authToken);
+        } catch (DatabaseErrorException e) {
+            ctx.send(new ErrorMessage(""))
+        }
         Integer gameID = command.getGameID();
 
         service.validateAuthToken(authToken);

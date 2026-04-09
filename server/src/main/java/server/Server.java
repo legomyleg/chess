@@ -13,6 +13,8 @@ import request.RegisterRequest;
 import result.CreateGameResult;
 import result.GameListResult;
 import result.RegisterResult;
+import server.websocket.WebSocketHandler;
+import server.websocket.WebSocketService;
 import service.*;
 
 public class Server {
@@ -27,6 +29,8 @@ public class Server {
     private final ListGamesService listGamesService;
     private final CreateGameService createGameService;
     private final JoinGameService joinGameService;
+    private final WebSocketService wsService;
+    private final WebSocketHandler wsHandler;
 
     public Server() {
         var authDAO = new SQLAuthDAO();
@@ -39,6 +43,8 @@ public class Server {
         listGamesService = new ListGamesService(authDAO, gameDAO);
         createGameService = new CreateGameService(authDAO, gameDAO);
         joinGameService = new JoinGameService(authDAO, gameDAO);
+        wsService = new WebSocketService(authDAO, gameDAO);
+        wsHandler = new WebSocketHandler(authDAO, gameDAO, wsService);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
@@ -48,7 +54,11 @@ public class Server {
                 .post("/game", this::createGame)
                 .put("/game", this::joinGame)
                 .delete("/db", this::deleteAllData)
-                .ws("/ws", )
+                .ws("/ws", ws -> {
+                    ws.onConnect(wsHandler);
+                    ws.onMessage(wsHandler);
+                    ws.onClose(wsHandler);
+                })
                 .exception(ResponseException.class, this::exceptionHandler)
                 .exception(RuntimeException.class, this::runtimeExceptionHandler);
 
