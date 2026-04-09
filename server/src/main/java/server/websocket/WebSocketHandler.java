@@ -3,6 +3,7 @@ package server.websocket;
 import chess.serialization.GsonFactory;
 import dataaccess.SQLAuthDAO;
 import dataaccess.SQLGameDAO;
+import exception.BadRequestException;
 import exception.ResponseException;
 import io.javalin.websocket.*;
 import org.jetbrains.annotations.NotNull;
@@ -43,8 +44,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         switch (base.getCommandType()) {
             case CONNECT -> connectToGame(ctx, base);
-            case LEAVE -> leaveGame()
-
+            case LEAVE -> leaveGame(ctx, base);
+            case RESIGN -> resignGame(ctx, base);
         }
     }
 
@@ -78,6 +79,35 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         String authToken = command.getAuthToken();
         String username = service.getUsername(authToken);
+        Integer gameID = command.getGameID();
+
+        service.validateAuthToken(authToken);
+        service.validateGameExists(gameID);
+
+        connectionManager.removeSessionFromGame(gameID, ctx.session);
+
+        var notification = new NotificationMessage(username + " has left the game.");
+
+        try {
+            connectionManager.broadcastMessageToGame(gameID, null, notification);
+        } catch (IOException e) {
+            throw new ResponseException(500, "Error: Server could not broadcast notification.");
+        }
+    }
+
+    private void resignGame(WsMessageContext ctx, UserGameCommand command) throws ResponseException {
+        assert command.getCommandType().equals(UserGameCommand.CommandType.RESIGN);
+
+        String authToken = command.getAuthToken();
+        String username = service.getUsername(authToken);
+        Integer gameID = command.getGameID();
+
+        service.validateAuthToken(authToken);
+        service.validateGameExists(gameID);
+
+        if (!service.isPlayerInGame(gameID, authToken)) {
+            throw new BadRequestException();
+        }
 
 
     }
