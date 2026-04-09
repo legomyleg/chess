@@ -1,6 +1,7 @@
 package server.websocket;
 
 import org.eclipse.jetty.websocket.api.Session;
+import org.jetbrains.annotations.Nullable;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
@@ -24,7 +25,7 @@ public class ConnectionManager {
         connections.get(gameID).remove(session);
     }
 
-    public void broadcastMessageToGame(Integer gameID, Session excludeSession, ServerMessage serverMessage) throws IOException {
+    public void broadcastMessageToGame(Integer gameID, @Nullable Session excludeSession, ServerMessage serverMessage) throws IOException {
         String msg = serverMessage.toString();
         List<Session> sessionsInGame = connections.get(gameID);
         for (Session session : sessionsInGame) {
@@ -33,5 +34,4 @@ public class ConnectionManager {
             }
         }
     }
-
 }
