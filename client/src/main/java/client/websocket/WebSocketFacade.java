@@ -5,11 +5,16 @@ import com.google.gson.Gson;
 import exception.ResponseException;
 import jakarta.websocket.*;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import static websocket.messages.ServerMessage.ServerMessageType.LOAD_GAME;
 
 public class WebSocketFacade extends Endpoint {
 
@@ -25,8 +30,16 @@ public class WebSocketFacade extends Endpoint {
             this.session = container.connectToServer(this, socketURI);
 
             this.session.addMessageHandler((MessageHandler.Whole<String>) message -> {
-                ServerMessage serverMessage = GsonFactory.create().fromJson(message, ServerMessage.class);
-                serverMessageHandler.handleMessage(serverMessage);
+                ServerMessage base = GsonFactory.create().fromJson(message, ServerMessage.class);
+
+                switch (base.getServerMessageType()) {
+                    case LOAD_GAME -> serverMessageHandler.handleMessage(
+                            GsonFactory.create().fromJson(message, LoadGameMessage.class));
+                    case NOTIFICATION -> serverMessageHandler.handleMessage(
+                            GsonFactory.create().fromJson(message, NotificationMessage.class));
+                    case ERROR -> serverMessageHandler.handleMessage(
+                            GsonFactory.create().fromJson(message, ErrorMessage.class));
+                }
             });
         } catch (DeploymentException | IOException | URISyntaxException ex) {
             throw new ResponseException(500, ex.getMessage());

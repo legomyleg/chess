@@ -4,8 +4,11 @@ import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
+import client.websocket.ServerMessageHandler;
 import exception.ResponseException;
 import model.GameData;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.ServerMessage;
 
 import java.util.*;
 
@@ -13,7 +16,7 @@ import static client.State.*;
 import static ui.EscapeSequences.*;
 import static ui.Screens.*;
 
-public class Client {
+public class Client implements ServerMessageHandler {
     private static final String LIGHT_SQUARE_BG = SET_BG_COLOR_WHITE;
     private static final String DARK_SQUARE_BG = SET_BG_COLOR_BLACK;
     private static final String WHITE_PIECE_COLOR = SET_TEXT_COLOR_RED;
@@ -78,6 +81,16 @@ public class Client {
             case IN_GAME -> handleInGame(command, parts);
         }
 
+    }
+
+    @Override
+    public void handleMessage(ServerMessage serverMessage) {
+        switch (serverMessage.getServerMessageType()) {
+            case LOAD_GAME -> {
+                var load = (LoadGameMessage) serverMessage;
+                drawBoard(load.getGame(), cur);
+            }
+        }
     }
 
     private void handleInGame(String command, String[] parts) {
