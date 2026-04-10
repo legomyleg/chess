@@ -2,6 +2,7 @@ package client;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import client.websocket.ServerMessageHandler;
@@ -22,7 +23,7 @@ import static ui.Screens.*;
 public class Client implements ServerMessageHandler {
 
     private static final class InGameState {
-        private int gameID;
+        private Integer gameID;
         private ChessGame.TeamColor perspective;
         private boolean observing;
         private ChessGame game;
@@ -37,6 +38,8 @@ public class Client implements ServerMessageHandler {
 
     private static final String LIGHT_SQUARE_BG = SET_BG_COLOR_WHITE;
     private static final String DARK_SQUARE_BG = SET_BG_COLOR_BLACK;
+    private static final String HIGHLIGHT_SQUARE_BG = SET_BG_COLOR_GREEN;
+    private static final String SELECTED_SQUARE_BG = SET_BG_COLOR_YELLOW;
     private static final String WHITE_PIECE_COLOR = SET_TEXT_COLOR_RED;
     private static final String BLACK_PIECE_COLOR = SET_TEXT_COLOR_BLUE;
     private static final String COORDINATE_COLOR = SET_TEXT_BOLD + SET_TEXT_COLOR_BLACK;
@@ -111,15 +114,21 @@ public class Client implements ServerMessageHandler {
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME -> {
                 var load = (LoadGameMessage) serverMessage;
-                drawBoard(load.getGame(), currentPerspective);
+                if (inGameState != null) {
+                    inGameState.game = load.getGame();
+                    drawBoard();
+                    printPrompt(currentState);
+                }
             }
             case NOTIFICATION -> {
                 var notification = (NotificationMessage) serverMessage;
                 print(SET_TEXT_COLOR_GREEN + notification.message);
+                printPrompt(currentState);
             }
             case ERROR -> {
                 var error = (ErrorMessage) serverMessage;
                 print(SET_TEXT_COLOR_RED + error.errorMessage);
+                printPrompt(currentState);
             }
         }
     }
@@ -129,6 +138,9 @@ public class Client implements ServerMessageHandler {
             case "help" -> printHelpScreen(IN_GAME);
             case "leave" -> { leave(); clearScreen(); print("Leaving game."); currentState = LOBBY; }
             case "redraw" -> {drawBoard();}
+            case "move" -> handleMove(parts);
+            case "highlight" -> handleHighlight(parts);
+            case "resign" -> handleResign(parts);
             case "quit" -> {}
             default -> print("Unknown command. Type \"help\" to see commands.");
         }
@@ -168,8 +180,13 @@ public class Client implements ServerMessageHandler {
     }
 
     private void observe(int id) {
-        currentPerspective = ChessGame.TeamColor.WHITE;
-        drawBoard(lastListedGames.get(id - 1).game(), ChessGame.TeamColor.WHITE);
+        inGameState = new InGameState(lastListedGames.get(id - 1).gameID(), ChessGame.TeamColor.WHITE, true, null);
+        currentState = IN_GAME;
+        try {
+            ws.connect(authToken, inGameState.gameID);
+        } catch (ResponseException e) {
+            printResponseError("observe", e);
+        }
     }
 
     private void handleJoin(String[] parts) {
@@ -225,13 +242,10 @@ public class Client implements ServerMessageHandler {
     private void join(int id, ChessGame.TeamColor color) {
         try {
             server.joinGame(color.toString(), lastListedGames.get(id - 1).gameID(), authToken);
+            inGameState = new InGameState(lastListedGames.get(id - 1).gameID(), color, false, null);
             currentState = IN_GAME;
             print(SET_TEXT_COLOR_BLUE + "JOINED!");
-            drawBoard(lastListedGames.get(id - 1).game(), color);
-            ws.connect(authToken, lastListedGames.get(id - 1).gameID());
-
-            inGameState = new InGameState(lastListedGames.get(id - 1).gameID(), color, false, lastListedGames.get(id - 1).game());
-
+            ws.connect(authToken, inGameState.gameID);
         } catch (ResponseException e) {
             printResponseError("join the game", e);
         }
@@ -239,10 +253,134 @@ public class Client implements ServerMessageHandler {
 
     private void leave() {
         try {
-            ws.leave(authToken, currentGameID);
-            currentGameID = null;
+            ws.leave(authToken, inGameState.gameID);
+            inGameState = null;
         } catch (ResponseException e) {
             printResponseError("leave", e);
+        }
+    }
+
+    private void handleMove(String[] parts) {
+        if (parts.length != 3 && parts.length != 4) {
+            print(SET_TEXT_COLOR_RED + "Usage: move <POSITION> <POSITION> [QUEEN|ROOK|BISHOP|KNIGHT]");
+            return;
+        }
+        if (inGameState == null) {
+            print(SET_TEXT_COLOR_RED + "No game is currently loaded.");
+            return;
+        }
+        if (inGameState.observing) {
+            print(SET_TEXT_COLOR_RED + "Observers cannot make moves.");
+            return;
+        }
+
+        ChessPosition startPosition;
+        ChessPosition endPosition;
+        ChessPiece.PieceType promotionPiece = null;
+        try {
+            startPosition = parsePosition(parts[1]);
+            endPosition = parsePosition(parts[2]);
+            if (parts.length == 4) {
+                promotionPiece = parsePromotionPiece(parts[3]);
+            }
+        } catch (IllegalArgumentException e) {
+            print(SET_TEXT_COLOR_RED + e.getMessage());
+            return;
+        }
+
+        if (promotionPiece == null) {
+            move(new ChessMove(startPosition, endPosition));
+        } else {
+            move(new ChessMove(startPosition, endPosition, promotionPiece));
+        }
+    }
+
+    private void move(ChessMove move) {
+        try {
+            ws.makeMove(authToken, inGameState.gameID, move);
+        } catch (ResponseException e) {
+            printResponseError("make move", e);
+        }
+    }
+
+    private void handleHighlight(String[] parts) {
+        if (parts.length != 2) {
+            print(SET_TEXT_COLOR_RED + "Usage: highlight <POSITION>");
+            return;
+        }
+        if (inGameState == null || inGameState.game == null) {
+            print(SET_TEXT_COLOR_RED + "No game is currently loaded.");
+            return;
+        }
+
+        ChessPosition position;
+        try {
+            position = parsePosition(parts[1]);
+        } catch (IllegalArgumentException e) {
+            print(SET_TEXT_COLOR_RED + e.getMessage());
+            return;
+        }
+
+        ChessPiece piece = inGameState.game.getBoard().getPiece(position);
+        if (piece == null) {
+            print(SET_TEXT_COLOR_RED + "There is no piece at that position.");
+            return;
+        }
+
+        Collection<ChessMove> validMoves = inGameState.game.validMoves(position);
+        Set<ChessPosition> highlightedSquares = new HashSet<>();
+        for (ChessMove validMove : validMoves) {
+            highlightedSquares.add(validMove.getEndPosition());
+        }
+
+        drawBoard(inGameState.game, inGameState.perspective, position, highlightedSquares);
+    }
+
+    private void handleResign(String[] parts) {
+        if (parts.length != 1) {
+            print(SET_TEXT_COLOR_RED + "Usage: resign");
+            return;
+        }
+        if (inGameState == null) {
+            print(SET_TEXT_COLOR_RED + "No game is currently loaded.");
+            return;
+        }
+        if (inGameState.observing) {
+            print(SET_TEXT_COLOR_RED + "Observers cannot resign.");
+            return;
+        }
+
+        resign();
+    }
+
+    private void resign() {
+        try {
+            ws.resign(authToken, inGameState.gameID);
+        } catch (ResponseException e) {
+            printResponseError("resign", e);
+        }
+    }
+
+    private ChessPosition parsePosition(String value) {
+        if (value.length() != 2) {
+            throw new IllegalArgumentException("Position must be in chess notation, like e2.");
+        }
+
+        char file = Character.toLowerCase(value.charAt(0));
+        char rank = value.charAt(1);
+
+        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') {
+            throw new IllegalArgumentException("Position must be in chess notation, like e2.");
+        }
+
+        return new ChessPosition(rank - '0', file - 'a' + 1);
+    }
+
+    private ChessPiece.PieceType parsePromotionPiece(String value) {
+        try {
+            return ChessPiece.PieceType.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Promotion piece must be QUEEN, ROOK, BISHOP, or KNIGHT.");
         }
     }
 
@@ -335,7 +473,20 @@ public class Client implements ServerMessageHandler {
         }
     }
 
+    private void drawBoard() {
+        if (inGameState == null || inGameState.game == null) {
+            print(SET_TEXT_COLOR_RED + "No game is currently loaded.");
+            return;
+        }
+        drawBoard(inGameState.game, inGameState.perspective, null, Collections.emptySet());
+    }
+
     private void drawBoard(ChessGame game, ChessGame.TeamColor perspective) {
+        drawBoard(game, perspective, null, Collections.emptySet());
+    }
+
+    private void drawBoard(ChessGame game, ChessGame.TeamColor perspective, ChessPosition selectedPosition,
+                           Collection<ChessPosition> highlightedSquares) {
         ChessBoard board = game.getBoard();
         int[] rowOrder = perspective == ChessGame.TeamColor.BLACK
                 ? new int[]{1, 2, 3, 4, 5, 6, 7, 8}
@@ -345,6 +496,7 @@ public class Client implements ServerMessageHandler {
                 : new int[]{1, 2, 3, 4, 5, 6, 7, 8};
 
         clearScreen();
+        printInLine("\n");
         print(renderColumnLabels(colOrder));
 
         for (int row : rowOrder) {
@@ -352,7 +504,7 @@ public class Client implements ServerMessageHandler {
             line.append(COORDINATE_COLOR).append(" ").append(row).append(" ").append(RESET_ALL);
 
             for (int col : colOrder) {
-                line.append(renderSquare(board, row, col));
+                line.append(renderSquare(board, row, col, selectedPosition, highlightedSquares));
             }
 
             line.append(COORDINATE_COLOR).append(" ").append(row).append(" ").append(RESET_ALL);
@@ -373,14 +525,27 @@ public class Client implements ServerMessageHandler {
         return labels.append(RESET_ALL).toString();
     }
 
-    private String renderSquare(ChessBoard board, int row, int col) {
+    private String renderSquare(ChessBoard board, int row, int col, ChessPosition selectedPosition,
+                                Collection<ChessPosition> highlightedSquares) {
+        ChessPosition position = new ChessPosition(row, col);
         ChessPiece piece = board.getPiece(new ChessPosition(row, col));
-        String squareColor = ((row + col) % 2 == 0) ? DARK_SQUARE_BG : LIGHT_SQUARE_BG;
+        String squareColor = getSquareColor(position, selectedPosition, highlightedSquares);
         String pieceColor = piece == null
                 ? RESET_TEXT_COLOR
                 : (piece.getTeamColor() == ChessGame.TeamColor.WHITE ? WHITE_PIECE_COLOR : BLACK_PIECE_COLOR);
 
         return squareColor + pieceColor + pieceSymbol(piece) + RESET_ALL;
+    }
+
+    private String getSquareColor(ChessPosition position, ChessPosition selectedPosition,
+                                  Collection<ChessPosition> highlightedSquares) {
+        if (position.equals(selectedPosition)) {
+            return SELECTED_SQUARE_BG;
+        }
+        if (highlightedSquares.contains(position)) {
+            return HIGHLIGHT_SQUARE_BG;
+        }
+        return ((position.getRow() + position.getColumn()) % 2 == 0) ? DARK_SQUARE_BG : LIGHT_SQUARE_BG;
     }
 
     private String pieceSymbol(ChessPiece piece) {

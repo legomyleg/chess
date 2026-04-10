@@ -34,7 +34,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         try {
             switch (base.getCommandType()) {
-                case CONNECT -> service.connect(ctx, base, connectionManager);
+                case CONNECT -> {
+                    service.connect(ctx, base, connectionManager);
+
+                }
                 case LEAVE -> service.leave(ctx, base, connectionManager);
                 case RESIGN -> service.resign(ctx, base, connectionManager);
                 case MAKE_MOVE -> {

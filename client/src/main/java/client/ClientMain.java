@@ -14,7 +14,6 @@ public class ClientMain {
 
         try {
             new Client(serverUrl).run();
-
         } catch (Throwable ex) {
             System.out.println(SET_TEXT_COLOR_RED + "Unable to start server: %s%n".formatted(ex.getMessage()));
         }

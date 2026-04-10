@@ -20,18 +20,27 @@ import static websocket.messages.ServerMessage.ServerMessageType.LOAD_GAME;
 
 public class WebSocketFacade extends Endpoint {
 
+    private final URI socketURI;
+    private final ServerMessageHandler serverMessageHandler;
     private Session session;
-    private ServerMessageHandler serverMessageHandler;
 
     public WebSocketFacade(String url, ServerMessageHandler serverMessageHandler) throws ResponseException {
+        this.serverMessageHandler = serverMessageHandler;
         try {
             url = url.replace("http", "ws");
-            URI socketURI = new URI(url + "/ws");
+            this.socketURI = new URI(url + "/ws");
+            openSession();
+        } catch (URISyntaxException ex) {
+            throw new ResponseException(500, ex.getMessage());
+        }
+    }
 
-            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            this.session = container.connectToServer(this, socketURI);
-
-            this.session.addMessageHandler((MessageHandler.Whole<String>) message -> {
+    @Override
+    public void onOpen(Session session, EndpointConfig endpointConfig) {
+        this.session = session;
+        this.session.addMessageHandler(new MessageHandler.Whole<String>() {
+            @Override
+            public void onMessage(String message) {
                 ServerMessage base = GsonFactory.create().fromJson(message, ServerMessage.class);
 
                 switch (base.getServerMessageType()) {
@@ -42,49 +51,62 @@ public class WebSocketFacade extends Endpoint {
                     case ERROR -> serverMessageHandler.handleMessage(
                             GsonFactory.create().fromJson(message, ErrorMessage.class));
                 }
-            });
-        } catch (DeploymentException | IOException | URISyntaxException ex) {
-            throw new ResponseException(500, ex.getMessage());
-        }
-    }
-
-    @Override
-    public void onOpen(Session session, EndpointConfig endpointConfig) {
+            }
+        });
     }
 
     public void connect(String authToken, Integer gameID) throws ResponseException {
         try {
+            ensureOpenSession();
             var command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
             this.session.getBasicRemote().sendText(new Gson().toJson(command));
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
     }
 
     public void leave(String authToken, Integer gameID) throws ResponseException {
         try {
+            ensureOpenSession();
             var command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
             this.session.getBasicRemote().sendText(new Gson().toJson(command));
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
     }
 
     public void resign(String authToken, Integer gameID) throws ResponseException {
         try {
+            ensureOpenSession();
             var command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
             this.session.getBasicRemote().sendText(new Gson().toJson(command));
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
     }
 
-    public void makeMove(String authToken, Integer gameID, ChessMove move) {
+    public void makeMove(String authToken, Integer gameID, ChessMove move) throws ResponseException {
         try {
+            ensureOpenSession();
             var command = new MakeMoveCommand(authToken, gameID, move);
             this.session.getBasicRemote().sendText(new Gson().toJson(command));
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
+        }
+    }
+
+    private void ensureOpenSession() throws ResponseException {
+        if (session == null || !session.isOpen()) {
+            openSession();
+        }
+    }
+
+    private void openSession() throws ResponseException {
+        try {
+            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+            this.session = container.connectToServer(this, socketURI);
+        } catch (DeploymentException | IOException ex) {
+            throw new ResponseException(500, ex.getMessage());
         }
     }
 }

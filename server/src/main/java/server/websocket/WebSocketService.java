@@ -92,7 +92,6 @@ public class WebSocketService {
         var commandContext = requireCommandContext(command);
         boolean observing = !isPlayerInGame(commandContext.gameID(), commandContext.authToken());
 
-        connectionManager.connections.putIfAbsent(commandContext.gameID(), new ArrayList<>());
         connectionManager.addSessionToGame(commandContext.gameID(), ctx.session);
 
         ctx.send(new LoadGameMessage(getGameData(commandContext.gameID()).game()).toString());
