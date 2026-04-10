@@ -23,10 +23,10 @@ import static ui.Screens.*;
 public class Client implements ServerMessageHandler {
 
     private static final class InGameState {
-        private Integer gameID;
-        private ChessGame.TeamColor perspective;
-        private boolean observing;
-        private ChessGame game;
+        private final Integer gameID;
+        private final ChessGame.TeamColor perspective;
+        private final boolean observing;
+        private final ChessGame game;
 
         private InGameState(int gameID, ChessGame.TeamColor perspective, boolean observing, ChessGame game) {
             this.gameID = gameID;
@@ -52,7 +52,7 @@ public class Client implements ServerMessageHandler {
     private String lastCommand;
     private List<GameData> lastListedGames;
 
-    private InGameState inGameState;
+    private volatile InGameState inGameState;
 
     public Client(String url) throws ResponseException {
         server = new ServerFacade(url);
@@ -114,8 +114,9 @@ public class Client implements ServerMessageHandler {
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME -> {
                 var load = (LoadGameMessage) serverMessage;
-                if (inGameState != null) {
-                    inGameState.game = load.getGame();
+                var current = inGameState;
+                if (current != null) {
+                    inGameState = new InGameState(current.gameID, current.perspective, current.observing, load.getGame());
                     drawBoard();
                     printPrompt(currentState);
                 }
