@@ -183,7 +183,9 @@ public class WebSocketService {
         broadcastMoveResults(ctx, command.getMove(), moveContext, connectionManager);
     }
 
-    private CommandContext requireCommandContext(UserGameCommand command) throws NotAuthenticatedException, DatabaseErrorException, BadRequestException {
+    private CommandContext requireCommandContext(UserGameCommand command) throws NotAuthenticatedException,
+            DatabaseErrorException,
+            BadRequestException {
         String authToken = command.getAuthToken();
         Integer gameID = command.getGameID();
 

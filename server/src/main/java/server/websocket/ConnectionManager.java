@@ -13,10 +13,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ConnectionManager {
     public final ConcurrentHashMap<Integer, List<Session>> connections = new ConcurrentHashMap<>();
 
-    public void addGame(Integer gameID) {
-        connections.put(gameID, new CopyOnWriteArrayList<>());
-    }
-
     public void addSessionToGame(Integer gameID, Session session) {
         connections.computeIfAbsent(gameID, ignored -> new CopyOnWriteArrayList<>()).add(session);
     }

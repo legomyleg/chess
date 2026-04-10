@@ -1,6 +1,5 @@
 package client;
 
-import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPiece;
@@ -9,6 +8,7 @@ import client.websocket.ServerMessageHandler;
 import client.websocket.WebSocketFacade;
 import exception.ResponseException;
 import model.GameData;
+import ui.BoardRenderer;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
@@ -35,14 +35,6 @@ public class Client implements ServerMessageHandler {
             this.game = game;
         }
     }
-
-    private static final String LIGHT_SQUARE_BG = SET_BG_COLOR_WHITE;
-    private static final String DARK_SQUARE_BG = SET_BG_COLOR_BLACK;
-    private static final String HIGHLIGHT_SQUARE_BG = SET_BG_COLOR_GREEN;
-    private static final String SELECTED_SQUARE_BG = SET_BG_COLOR_YELLOW;
-    private static final String WHITE_PIECE_COLOR = SET_TEXT_COLOR_RED;
-    private static final String BLACK_PIECE_COLOR = SET_TEXT_COLOR_BLUE;
-    private static final String COORDINATE_COLOR = SET_TEXT_BOLD + SET_TEXT_COLOR_BLACK;
 
     private final ServerFacade server;
     private final WebSocketFacade ws;
@@ -279,10 +271,10 @@ public class Client implements ServerMessageHandler {
         ChessPosition endPosition;
         ChessPiece.PieceType promotionPiece = null;
         try {
-            startPosition = parsePosition(parts[1]);
-            endPosition = parsePosition(parts[2]);
+            startPosition = ChessInputParser.parsePosition(parts[1]);
+            endPosition = ChessInputParser.parsePosition(parts[2]);
             if (parts.length == 4) {
-                promotionPiece = parsePromotionPiece(parts[3]);
+                promotionPiece = ChessInputParser.parsePromotionPiece(parts[3]);
             }
         } catch (IllegalArgumentException e) {
             print(SET_TEXT_COLOR_RED + e.getMessage());
@@ -316,7 +308,7 @@ public class Client implements ServerMessageHandler {
 
         ChessPosition position;
         try {
-            position = parsePosition(parts[1]);
+            position = ChessInputParser.parsePosition(parts[1]);
         } catch (IllegalArgumentException e) {
             print(SET_TEXT_COLOR_RED + e.getMessage());
             return;
@@ -359,29 +351,6 @@ public class Client implements ServerMessageHandler {
             ws.resign(authToken, inGameState.gameID);
         } catch (ResponseException e) {
             printResponseError("resign", e);
-        }
-    }
-
-    private ChessPosition parsePosition(String value) {
-        if (value.length() != 2) {
-            throw new IllegalArgumentException("Position must be in chess notation, like e2.");
-        }
-
-        char file = Character.toLowerCase(value.charAt(0));
-        char rank = value.charAt(1);
-
-        if (file < 'a' || file > 'h' || rank < '1' || rank > '8') {
-            throw new IllegalArgumentException("Position must be in chess notation, like e2.");
-        }
-
-        return new ChessPosition(rank - '0', file - 'a' + 1);
-    }
-
-    private ChessPiece.PieceType parsePromotionPiece(String value) {
-        try {
-            return ChessPiece.PieceType.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Promotion piece must be QUEEN, ROOK, BISHOP, or KNIGHT.");
         }
     }
 
@@ -488,90 +457,8 @@ public class Client implements ServerMessageHandler {
 
     private void drawBoard(ChessGame game, ChessGame.TeamColor perspective, ChessPosition selectedPosition,
                            Collection<ChessPosition> highlightedSquares) {
-        ChessBoard board = game.getBoard();
-        int[] rowOrder = perspective == ChessGame.TeamColor.BLACK
-                ? new int[]{1, 2, 3, 4, 5, 6, 7, 8}
-                : new int[]{8, 7, 6, 5, 4, 3, 2, 1};
-        int[] colOrder = perspective == ChessGame.TeamColor.BLACK
-                ? new int[]{8, 7, 6, 5, 4, 3, 2, 1}
-                : new int[]{1, 2, 3, 4, 5, 6, 7, 8};
-
         clearScreen();
-        printInLine("\n");
-        print(renderColumnLabels(colOrder));
-
-        for (int row : rowOrder) {
-            StringBuilder line = new StringBuilder();
-            line.append(COORDINATE_COLOR).append(" ").append(row).append(" ").append(RESET_ALL);
-
-            for (int col : colOrder) {
-                line.append(renderSquare(board, row, col, selectedPosition, highlightedSquares));
-            }
-
-            line.append(COORDINATE_COLOR).append(" ").append(row).append(" ").append(RESET_ALL);
-            print(line.toString());
-        }
-
-        print(renderColumnLabels(colOrder));
-    }
-
-    private String renderColumnLabels(int[] colOrder) {
-        StringBuilder labels = new StringBuilder();
-        labels.append(COORDINATE_COLOR).append("   ");
-
-        for (int col : colOrder) {
-            labels.append(" ").append((char) ('a' + col - 1)).append(" ");
-        }
-
-        return labels.append(RESET_ALL).toString();
-    }
-
-    private String renderSquare(ChessBoard board, int row, int col, ChessPosition selectedPosition,
-                                Collection<ChessPosition> highlightedSquares) {
-        ChessPosition position = new ChessPosition(row, col);
-        ChessPiece piece = board.getPiece(new ChessPosition(row, col));
-        String squareColor = getSquareColor(position, selectedPosition, highlightedSquares);
-        String pieceColor = piece == null
-                ? RESET_TEXT_COLOR
-                : (piece.getTeamColor() == ChessGame.TeamColor.WHITE ? WHITE_PIECE_COLOR : BLACK_PIECE_COLOR);
-
-        return squareColor + pieceColor + pieceSymbol(piece) + RESET_ALL;
-    }
-
-    private String getSquareColor(ChessPosition position, ChessPosition selectedPosition,
-                                  Collection<ChessPosition> highlightedSquares) {
-        if (position.equals(selectedPosition)) {
-            return SELECTED_SQUARE_BG;
-        }
-        if (highlightedSquares.contains(position)) {
-            return HIGHLIGHT_SQUARE_BG;
-        }
-        return ((position.getRow() + position.getColumn()) % 2 == 0) ? DARK_SQUARE_BG : LIGHT_SQUARE_BG;
-    }
-
-    private String pieceSymbol(ChessPiece piece) {
-        if (piece == null) {
-            return EMPTY;
-        }
-
-        return switch (piece.getTeamColor()) {
-            case WHITE -> switch (piece.getPieceType()) {
-                case KING -> WHITE_KING;
-                case QUEEN -> WHITE_QUEEN;
-                case BISHOP -> WHITE_BISHOP;
-                case KNIGHT -> WHITE_KNIGHT;
-                case ROOK -> WHITE_ROOK;
-                case PAWN -> WHITE_PAWN;
-            };
-            case BLACK -> switch (piece.getPieceType()) {
-                case KING -> BLACK_KING;
-                case QUEEN -> BLACK_QUEEN;
-                case BISHOP -> BLACK_BISHOP;
-                case KNIGHT -> BLACK_KNIGHT;
-                case ROOK -> BLACK_ROOK;
-                case PAWN -> BLACK_PAWN;
-            };
-        };
+        printInLine(BoardRenderer.render(game, perspective, selectedPosition, highlightedSquares));
     }
 
     private void clearScreen() {
