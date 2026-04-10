@@ -15,6 +15,7 @@ import websocket.messages.ServerMessage;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 
 import static websocket.messages.ServerMessage.ServerMessageType.LOAD_GAME;
 
@@ -23,6 +24,9 @@ public class WebSocketFacade extends Endpoint {
     private final URI socketURI;
     private final ServerMessageHandler serverMessageHandler;
     private Session session;
+    private String activeAuthToken;
+    private Integer activeGameID;
+    private boolean sessionConnectedToGame;
 
     public WebSocketFacade(String url, ServerMessageHandler serverMessageHandler) throws ResponseException {
         this.serverMessageHandler = serverMessageHandler;
@@ -38,6 +42,7 @@ public class WebSocketFacade extends Endpoint {
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
         this.session = session;
+        this.sessionConnectedToGame = false;
         this.session.addMessageHandler(new MessageHandler.Whole<String>() {
             @Override
             public void onMessage(String message) {
@@ -55,11 +60,24 @@ public class WebSocketFacade extends Endpoint {
         });
     }
 
+    @Override
+    public void onClose(Session session, CloseReason closeReason) {
+        this.session = null;
+        this.sessionConnectedToGame = false;
+    }
+
+    @Override
+    public void onError(Session session, Throwable thr) {
+        this.sessionConnectedToGame = false;
+    }
+
     public void connect(String authToken, Integer gameID) throws ResponseException {
         try {
             ensureOpenSession();
-            var command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
-            this.session.getBasicRemote().sendText(new Gson().toJson(command));
+            activeAuthToken = authToken;
+            activeGameID = gameID;
+            sendCommand(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
+            sessionConnectedToGame = true;
         } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
@@ -68,8 +86,12 @@ public class WebSocketFacade extends Endpoint {
     public void leave(String authToken, Integer gameID) throws ResponseException {
         try {
             ensureOpenSession();
-            var command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
-            this.session.getBasicRemote().sendText(new Gson().toJson(command));
+            sendCommand(new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID));
+            if (Objects.equals(activeAuthToken, authToken) && Objects.equals(activeGameID, gameID)) {
+                activeAuthToken = null;
+                activeGameID = null;
+                sessionConnectedToGame = false;
+            }
         } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
@@ -77,9 +99,8 @@ public class WebSocketFacade extends Endpoint {
 
     public void resign(String authToken, Integer gameID) throws ResponseException {
         try {
-            ensureOpenSession();
-            var command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
-            this.session.getBasicRemote().sendText(new Gson().toJson(command));
+            ensureConnectedToGame(authToken, gameID);
+            sendCommand(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID));
         } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
@@ -87,9 +108,8 @@ public class WebSocketFacade extends Endpoint {
 
     public void makeMove(String authToken, Integer gameID, ChessMove move) throws ResponseException {
         try {
-            ensureOpenSession();
-            var command = new MakeMoveCommand(authToken, gameID, move);
-            this.session.getBasicRemote().sendText(new Gson().toJson(command));
+            ensureConnectedToGame(authToken, gameID);
+            sendCommand(new MakeMoveCommand(authToken, gameID, move));
         } catch (IOException | IllegalStateException e) {
             throw new ResponseException(500, e.getMessage());
         }
@@ -108,5 +128,19 @@ public class WebSocketFacade extends Endpoint {
         } catch (DeploymentException | IOException ex) {
             throw new ResponseException(500, ex.getMessage());
         }
+    }
+
+    private void ensureConnectedToGame(String authToken, Integer gameID) throws ResponseException, IOException {
+        ensureOpenSession();
+        if (!sessionConnectedToGame || !Objects.equals(activeAuthToken, authToken) || !Objects.equals(activeGameID, gameID)) {
+            activeAuthToken = authToken;
+            activeGameID = gameID;
+            sendCommand(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
+            sessionConnectedToGame = true;
+        }
+    }
+
+    private void sendCommand(UserGameCommand command) throws IOException {
+        this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 }
