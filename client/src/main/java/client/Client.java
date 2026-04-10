@@ -5,9 +5,12 @@ import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import client.websocket.ServerMessageHandler;
+import client.websocket.WebSocketFacade;
 import exception.ResponseException;
 import model.GameData;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.util.*;
@@ -17,6 +20,21 @@ import static ui.EscapeSequences.*;
 import static ui.Screens.*;
 
 public class Client implements ServerMessageHandler {
+
+    private static final class InGameState {
+        private int gameID;
+        private ChessGame.TeamColor perspective;
+        private boolean observing;
+        private ChessGame game;
+
+        private InGameState(int gameID, ChessGame.TeamColor perspective, boolean observing, ChessGame game) {
+            this.gameID = gameID;
+            this.perspective = perspective;
+            this.observing = observing;
+            this.game = game;
+        }
+    }
+
     private static final String LIGHT_SQUARE_BG = SET_BG_COLOR_WHITE;
     private static final String DARK_SQUARE_BG = SET_BG_COLOR_BLACK;
     private static final String WHITE_PIECE_COLOR = SET_TEXT_COLOR_RED;
@@ -24,18 +42,23 @@ public class Client implements ServerMessageHandler {
     private static final String COORDINATE_COLOR = SET_TEXT_BOLD + SET_TEXT_COLOR_BLACK;
 
     private final ServerFacade server;
+    private final WebSocketFacade ws;
     private State currentState;
     private final Scanner scanner;
     private String authToken;
     private String lastCommand;
     private List<GameData> lastListedGames;
 
-    public Client(String url) {
+    private InGameState inGameState;
+
+    public Client(String url) throws ResponseException {
         server = new ServerFacade(url);
+        ws = new WebSocketFacade(url, this);
         scanner = new Scanner(System.in);
         authToken = "";
         lastCommand = "";
         lastListedGames = new ArrayList<>();
+        inGameState = null;
     }
 
     public void run() {
@@ -88,15 +111,24 @@ public class Client implements ServerMessageHandler {
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME -> {
                 var load = (LoadGameMessage) serverMessage;
-                drawBoard(load.getGame(), cur);
+                drawBoard(load.getGame(), currentPerspective);
+            }
+            case NOTIFICATION -> {
+                var notification = (NotificationMessage) serverMessage;
+                print(SET_TEXT_COLOR_GREEN + notification.message);
+            }
+            case ERROR -> {
+                var error = (ErrorMessage) serverMessage;
+                print(SET_TEXT_COLOR_RED + error.errorMessage);
             }
         }
     }
 
     private void handleInGame(String command, String[] parts) {
         switch (command) {
-            case "help" -> print("In game help menu not set up yet. Type \"leave\" to leave game.");
-            case "leave" -> { clearScreen(); print("Leaving game."); currentState = LOBBY; }
+            case "help" -> printHelpScreen(IN_GAME);
+            case "leave" -> { leave(); clearScreen(); print("Leaving game."); currentState = LOBBY; }
+            case "redraw" -> {drawBoard();}
             case "quit" -> {}
             default -> print("Unknown command. Type \"help\" to see commands.");
         }
@@ -136,6 +168,7 @@ public class Client implements ServerMessageHandler {
     }
 
     private void observe(int id) {
+        currentPerspective = ChessGame.TeamColor.WHITE;
         drawBoard(lastListedGames.get(id - 1).game(), ChessGame.TeamColor.WHITE);
     }
 
@@ -195,8 +228,21 @@ public class Client implements ServerMessageHandler {
             currentState = IN_GAME;
             print(SET_TEXT_COLOR_BLUE + "JOINED!");
             drawBoard(lastListedGames.get(id - 1).game(), color);
+            ws.connect(authToken, lastListedGames.get(id - 1).gameID());
+
+            inGameState = new InGameState(lastListedGames.get(id - 1).gameID(), color, false, lastListedGames.get(id - 1).game());
+
         } catch (ResponseException e) {
             printResponseError("join the game", e);
+        }
+    }
+
+    private void leave() {
+        try {
+            ws.leave(authToken, currentGameID);
+            currentGameID = null;
+        } catch (ResponseException e) {
+            printResponseError("leave", e);
         }
     }
 
@@ -285,7 +331,7 @@ public class Client implements ServerMessageHandler {
         switch (state) {
             case SIGNED_OUT -> printInLine(LOGGED_OUT_HELP_SCREEN);
             case LOBBY -> printInLine(LOGGED_IN_HELP_SCREEN);
-            case IN_GAME -> {}
+            case IN_GAME -> printInLine(IN_GAME_HELP_SCREEN);
         }
     }
 
