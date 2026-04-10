@@ -89,23 +89,18 @@ public class WebSocketService {
     public void connect(WsMessageContext ctx, UserGameCommand command, ConnectionManager connectionManager) throws ResponseException {
         assert command.getCommandType() == UserGameCommand.CommandType.CONNECT;
 
-        String authToken = command.getAuthToken();
-        Integer gameID = command.getGameID();
+        var commandContext = requireCommandContext(command);
+        boolean observing = !isPlayerInGame(commandContext.gameID(), commandContext.authToken());
 
-        validateAuthToken(authToken);
-        validateGameExists(gameID);
-        String username = getUsername(authToken);
-        boolean observing = !isPlayerInGame(gameID, authToken);
+        connectionManager.connections.putIfAbsent(commandContext.gameID(), new ArrayList<>());
+        connectionManager.addSessionToGame(commandContext.gameID(), ctx.session);
 
-        connectionManager.connections.putIfAbsent(gameID, new ArrayList<>());
-        connectionManager.addSessionToGame(gameID, ctx.session);
-
-        ctx.send(new LoadGameMessage(getGameData(gameID).game()).toString());
+        ctx.send(new LoadGameMessage(getGameData(commandContext.gameID()).game()).toString());
 
         String role = observing ? "an observer" : "a player";
-        var notification = new NotificationMessage(username + " joined the game as " + role + ".");
+        var notification = new NotificationMessage(commandContext.username() + " joined the game as " + role + ".");
         try {
-            connectionManager.broadcastMessageToGame(gameID, ctx.session, notification);
+            connectionManager.broadcastMessageToGame(commandContext.gameID(), ctx.session, notification);
         } catch (IOException e) {
             throw new ResponseException(500, "Server suffered an error.");
         }
@@ -114,19 +109,29 @@ public class WebSocketService {
     public void leave(WsMessageContext ctx, UserGameCommand command, ConnectionManager connectionManager) throws ResponseException {
         assert command.getCommandType().equals(UserGameCommand.CommandType.LEAVE);
 
-        String authToken = command.getAuthToken();
-        Integer gameID = command.getGameID();
+        var commandContext = requireCommandContext(command);
 
-        validateAuthToken(authToken);
-        validateGameExists(gameID);
-        String username = getUsername(authToken);
+        if (isPlayerInGame(commandContext.gameID(), commandContext.authToken())){
+            GameData gameData;
+            try {
+                gameData = gameDAO.getGameByGameID(command.getGameID());
+                ChessGame.TeamColor playerColor = getPlayerColor(gameData, commandContext.username());
+                if (playerColor == WHITE) {
+                    gameDAO.updateWhitePlayer(command.getGameID(), null);
+                } else {
+                    gameDAO.updateBlackPlayer(command.getGameID(), null);
+                }
+            } catch (DataAccessException e) {
+                throw new ResponseException(500, "Server encountered an error.");
+            }
+        }
 
-        connectionManager.removeSessionFromGame(gameID, ctx.session);
+        connectionManager.removeSessionFromGame(commandContext.gameID(), ctx.session);
 
-        var notification = new NotificationMessage(username + " has left the game.");
+        var notification = new NotificationMessage(commandContext.username() + " has left the game.");
 
         try {
-            connectionManager.broadcastMessageToGame(gameID, null, notification);
+            connectionManager.broadcastMessageToGame(commandContext.gameID(), null, notification);
         } catch (IOException e) {
             throw new ResponseException(500, "Error: Server could not broadcast notification.");
         }
@@ -135,106 +140,163 @@ public class WebSocketService {
     public void resign(WsMessageContext ctx, UserGameCommand command, ConnectionManager connectionManager) throws ResponseException {
         assert command.getCommandType().equals(UserGameCommand.CommandType.RESIGN);
 
-        String authToken = command.getAuthToken();
-        Integer gameID = command.getGameID();
+        var commandContext = requireCommandContext(command);
 
-        validateAuthToken(authToken);
-        validateGameExists(gameID);
-        String username = getUsername(authToken);
-
-        if (!isPlayerInGame(gameID, authToken)) {
-            throw new BadRequestException();
+        if (!isPlayerInGame(commandContext.gameID(), commandContext.authToken())) {
+            sendError(ctx, "Observers cannot resign.");
+            return;
         }
+
+        try {
+            if (!gameFull(command.getGameID())) {
+                sendError(ctx, "Cannot resign, game has not yet started.");
+                return;
+            }
+            if (!gameDAO.getGameByGameID(command.getGameID()).game().inProgress()) {
+                sendError(ctx, "Cannot resign. Game over.");
+                return;
+            }
+
+            gameDAO.endGame(command.getGameID());
+            var resignNotification = new NotificationMessage(commandContext.username() +  " resigned. Lame.");
+            connectionManager.broadcastMessageToGame(command.getGameID(), null, resignNotification);
+        } catch (DataAccessException | IOException e) {
+            sendError(ctx, "Server error.");
+        }
+    }
+
+    private boolean gameFull(Integer gameID) throws DataAccessException {
+        var gameData = gameDAO.getGameByGameID(gameID);
+        return gameData.whiteUsername() != null && gameData.blackUsername() != null;
     }
 
 
     public void makeMove(WsMessageContext ctx, MakeMoveCommand command, ConnectionManager connectionManager) {
+        var moveContext = loadMoveContext(ctx, command);
+        if (moveContext == null) {
+            return;
+        }
+
+        if (!applyMove(ctx, moveContext, command.getMove())) {
+            return;
+        }
+
+        broadcastMoveResults(ctx, command.getMove(), moveContext, connectionManager);
+    }
+
+    private CommandContext requireCommandContext(UserGameCommand command) throws NotAuthenticatedException, DatabaseErrorException, BadRequestException {
         String authToken = command.getAuthToken();
         Integer gameID = command.getGameID();
-        ChessMove move = command.getMove();
-        ChessGame game;
+
         String username;
-        ChessGame.TeamColor otherPlayerColor;
-        String otherPlayerUsername;
+        validateAuthToken(authToken);
+        validateGameExists(gameID);
+        username = getUsername(authToken);
 
+        return new CommandContext(authToken, gameID, username);
+    }
+
+    private MoveContext loadMoveContext(WsMessageContext ctx, MakeMoveCommand command) {
         try {
-            validateGameExists(gameID);
-            validateAuthToken(authToken);
+            var commandContext = requireCommandContext(command);
 
-            if (!isPlayerInGame(gameID, authToken)) {
-                sendError(ctx,"Cannot make move.");
-                return;
+            if (!isPlayerInGame(commandContext.gameID(), commandContext.authToken())) {
+                sendError(ctx, "Cannot make move.");
+                return null;
             }
-            GameData gameData = getGameData(gameID);
-            game = gameData.game();
-            username = getUsername(authToken);
-            var playerColor = username.equals(gameData.whiteUsername()) ? WHITE : BLACK;
-            otherPlayerColor = playerColor.equals(WHITE) ? BLACK : WHITE;
-            otherPlayerUsername = otherPlayerColor.equals(WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
+
+            GameData gameData = getGameData(commandContext.gameID());
+            ChessGame.TeamColor playerColor = getPlayerColor(gameData, commandContext.username());
+            ChessGame.TeamColor otherPlayerColor = playerColor.equals(WHITE) ? BLACK : WHITE;
+            String otherPlayerUsername = otherPlayerColor.equals(WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
+            ChessGame game = gameData.game();
 
             if (game.getTeamTurn() != playerColor) {
-                sendError(ctx,"Not your turn.");
-                return;
+                sendError(ctx, "Not your turn.");
+                return null;
             }
 
+            if (!game.inProgress()) {
+                sendError(ctx, "Game is over.");
+                return null;
+            }
+
+            return new MoveContext(commandContext.gameID(), game, commandContext.username(), otherPlayerColor, otherPlayerUsername);
         } catch (BadRequestException e) {
             sendError(ctx, "Invalid game ID.");
-            return;
+            return null;
         } catch (NotAuthenticatedException e) {
             sendError(ctx, "Could not authenticate.");
-            return;
+            return null;
         } catch (DatabaseErrorException e) {
             sendError(ctx, "Server error. Try again later.");
-            return;
+            return null;
         }
+    }
 
+    private boolean applyMove(WsMessageContext ctx, MoveContext moveContext, ChessMove move) {
         try {
-            game.makeMove(move);
-            gameDAO.updateGame(gameID, game);
+            moveContext.game().makeMove(move);
+            gameDAO.updateGame(moveContext.gameID(), moveContext.game());
+            return true;
         } catch (InvalidMoveException e) {
             sendError(ctx, "Invalid move.");
-            return;
+            return false;
         } catch (DataAccessException e) {
             sendError(ctx, "Server error.");
-            return;
+            return false;
         }
+    }
 
+    private void broadcastMoveResults(WsMessageContext ctx, ChessMove move, MoveContext moveContext,
+                                      ConnectionManager connectionManager) {
         try {
-            connectionManager.broadcastMessageToGame(gameID, null, new LoadGameMessage(game));
-            var notification = new NotificationMessage(username +
+            connectionManager.broadcastMessageToGame(moveContext.gameID(), null, new LoadGameMessage(moveContext.game()));
+            var notification = new NotificationMessage(moveContext.username() +
                     " moved from " +
                     move.getStartPosition().toString() +
                     " to " +
                     move.getEndPosition().toString() + ".");
-            connectionManager.broadcastMessageToGame(gameID, ctx.session, notification);
+            connectionManager.broadcastMessageToGame(moveContext.gameID(), ctx.session, notification);
 
-            if (game.isInCheckmate(otherPlayerColor)) {
-                var checkmateNotification = new NotificationMessage("Checkmate!!");
-                var winNotification = new NotificationMessage(username + " wins!!!");
-                connectionManager.broadcastMessageToGame(gameID, null, checkmateNotification);
-                connectionManager.broadcastMessageToGame(gameID, null, winNotification);
-                gameDAO.endGame(gameID);
+            if (moveContext.game().isInCheckmate(moveContext.otherPlayerColor())) {
+                var checkmateNotification = new NotificationMessage("Checkmate!! " + moveContext.username() + " wins!!");
+                connectionManager.broadcastMessageToGame(moveContext.gameID(), null, checkmateNotification);
+                gameDAO.endGame(moveContext.gameID());
                 return;
             }
 
-            if (game.isInStalemate(otherPlayerColor)) {
+            if (moveContext.game().isInStalemate(moveContext.otherPlayerColor())) {
                 var stalemateNotification = new NotificationMessage("Stalemate!!");
-                connectionManager.broadcastMessageToGame(gameID, null, stalemateNotification);
-                gameDAO.endGame(gameID);
+                connectionManager.broadcastMessageToGame(moveContext.gameID(), null, stalemateNotification);
+                gameDAO.endGame(moveContext.gameID());
                 return;
             }
 
-            if (game.isInCheck(otherPlayerColor)) {
-                var checkNotification = new NotificationMessage(otherPlayerUsername + " is in check!");
-                connectionManager.broadcastMessageToGame(gameID, null, checkNotification);
+            if (moveContext.game().isInCheck(moveContext.otherPlayerColor())) {
+                var checkNotification = new NotificationMessage(moveContext.otherPlayerUsername() + " is in check!");
+                connectionManager.broadcastMessageToGame(moveContext.gameID(), null, checkNotification);
             }
         } catch (IOException | DataAccessException e) {
             sendError(ctx, "Server error.");
         }
     }
 
+    private ChessGame.TeamColor getPlayerColor(GameData gameData, String username) {
+        if (username.equals(gameData.whiteUsername())) {
+            return WHITE;
+        } else if (username.equals(gameData.blackUsername())) {
+            return BLACK;
+        }
+        return null;
+    }
+
     private void sendError(WsMessageContext ctx, String msg) {
         ctx.send(new ErrorMessage(msg).toString());
     }
-}
 
+    private record CommandContext(String authToken, Integer gameID, String username) {}
+
+    private record MoveContext(Integer gameID, ChessGame game, String username,
+                               ChessGame.TeamColor otherPlayerColor, String otherPlayerUsername) {}
+}

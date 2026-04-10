@@ -1,21 +1,12 @@
 package server.websocket;
 
 import chess.serialization.GsonFactory;
-import dataaccess.SQLAuthDAO;
-import dataaccess.SQLGameDAO;
-import exception.BadRequestException;
-import exception.DatabaseErrorException;
 import exception.ResponseException;
 import io.javalin.websocket.*;
 import org.jetbrains.annotations.NotNull;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
-import websocket.messages.LoadGameMessage;
-import websocket.messages.NotificationMessage;
-
-import java.io.IOException;
-import java.util.ArrayList;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
 
@@ -48,7 +39,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case RESIGN -> service.resign(ctx, base, connectionManager);
                 case MAKE_MOVE -> {
                     MakeMoveCommand moveCommand = GsonFactory.create().fromJson(json, MakeMoveCommand.class);
-                    makeMove(ctx, moveCommand);
+                    service.makeMove(ctx, moveCommand, connectionManager);
                 }
             }
         } catch(ResponseException e) {
@@ -56,10 +47,5 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         } catch (Exception e) {
             ctx.send(new ErrorMessage("Server error").toString());
         }
-    }
-
-    private void makeMove(WsMessageContext ctx, MakeMoveCommand command) {
-        var move = command.getMove();
-
     }
 }

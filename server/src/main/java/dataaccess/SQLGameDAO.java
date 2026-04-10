@@ -75,13 +75,17 @@ public class SQLGameDAO implements GameDAO {
 
     @Override
     public void updateWhitePlayer(Integer gameID, String whiteUsername) throws DataAccessException {
-        var statement = "UPDATE games SET white_username='%s' WHERE game_id=%d".formatted(whiteUsername, gameID);
+        var statement = (whiteUsername == null)
+                ? "UPDATE games SET white_username=NULL WHERE game_id=%d".formatted(gameID)
+                : "UPDATE games SET white_username='%s' WHERE game_id=%d".formatted(whiteUsername, gameID);
         DBHelper.updateHelper(statement);
     }
 
     @Override
     public void updateBlackPlayer(Integer gameID, String blackUsername) throws DataAccessException {
-        var statement = "UPDATE games SET black_username='%s' WHERE game_id=%d".formatted(blackUsername, gameID);
+        var statement = (blackUsername == null)
+                ? "UPDATE games SET black_username=NULL WHERE game_id=%d".formatted(gameID)
+                : "UPDATE games SET black_username='%s' WHERE game_id=%d".formatted(blackUsername, gameID);
         DBHelper.updateHelper(statement);
     }
 

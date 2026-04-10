@@ -57,7 +57,7 @@ public class ChessGame {
         gameOver = true;
     }
 
-    public boolean gameInProgress() {
+    public boolean inProgress() {
         return !gameOver;
     }
 
